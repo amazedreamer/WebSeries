@@ -1,3 +1,4 @@
+
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
 #
@@ -11,9 +12,10 @@
 #
 
 import os
-from os import environ,getenv
+from os import environ, getenv
 import logging
 from logging.handlers import RotatingFileHandler
+
 
 def small_caps(text):
     trans_table = str.maketrans(
@@ -21,49 +23,99 @@ def small_caps(text):
         "ᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢᴀʙᴄᴅᴇғɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ"
     )
     return text.translate(trans_table)
-#rohit_1888 on Tg
-#--------------------------------------------
-#Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8233380798:AAH0nKjjvG_1ff_yQ1oGrizKQO_JVol7dbU")
-APP_ID = int(os.environ.get("APP_ID", "27570787")) #Your API ID from my.telegram.org
-API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39") #Your API Hash from my.telegram.org
-#--------------------------------------------
 
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003732812304")) #Your db channel Id
-OWNER = os.environ.get("OWNER", "sakxxii") # Owner username without @
-OWNER_ID = int(os.environ.get("OWNER_ID", "8584220782")) # Owner id
-#--------------------------------------------
+
+# rohit_1888 on Tg
+# --------------------------------------------
+# Bot token @Botfather
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8233380798:AAH0nKjjvG_1ff_yQ1oGrizKQO_JVol7dbU")
+APP_ID = int(os.environ.get("APP_ID", "27570787"))  # Your API ID from my.telegram.org
+API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39")  # Your API Hash from my.telegram.org
+# --------------------------------------------
+
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003732812304"))  # Your db channel Id
+OWNER = os.environ.get("OWNER", "sakxxii")  # Owner username without @
+OWNER_ID = int(os.environ.get("OWNER_ID", "8584220782"))  # Owner id
+# --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
-#--------------------------------------------
+# --------------------------------------------
 DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://Test:aloksingh@cluster0.iomykdc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 DB_NAME = os.environ.get("DATABASE_NAME", "FiesSNew")
-#--------------------------------------------
+# --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "150"))  # 0 means no expiry
 BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/OfficialAdminDMRoBot")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
-#--------------------------------------------
+# --------------------------------------------
 START_PIC = os.environ.get("START_PIC", "https://api.aniwallpaper.workers.dev/random?type=cute")
 FORCE_PIC = os.environ.get("FORCE_PIC", "https://api.aniwallpaper.workers.dev/i/a77d7c")
 
-#--------------------------------------------
+# --------------------------------------------
+# =============================================
+# MULTIPLE URL SHORTENERS — rotation per user
+# Add up to 6 shorteners. Leave URL/API empty to disable that slot.
+# The bot will rotate each user through active shorteners in order:
+# Shortener 1 → Shortener 2 → ... → Shortener N → back to Shortener 1
+# =============================================
+
+# Shortener 1 (primary / existing)
 SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "mdiskshort.in")
 SHORTLINK_API = os.environ.get("SHORTLINK_API", "b0900e07e0bbb3d0fd7c218247792d03d9bd7866")
-TUT_VID = os.environ.get("TUT_VID","https://t.me/DDNationalOfficial/9")
+
+# Shortener 2
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "")
+
+# Shortener 3
+SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "")
+SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "")
+
+# Shortener 4
+SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "")
+SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "")
+
+# Shortener 5
+SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "")
+SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "")
+
+# Shortener 6
+SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "")
+SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "")
+
+# Build list of active shorteners (those where both URL and API are non-empty)
+SHORTLINK_PROVIDERS = []
+_raw_providers = [
+    (SHORTLINK_URL,   SHORTLINK_API),
+    (SHORTLINK_URL_2, SHORTLINK_API_2),
+    (SHORTLINK_URL_3, SHORTLINK_API_3),
+    (SHORTLINK_URL_4, SHORTLINK_API_4),
+    (SHORTLINK_URL_5, SHORTLINK_API_5),
+    (SHORTLINK_URL_6, SHORTLINK_API_6),
+]
+for _url, _api in _raw_providers:
+    if _url and _api:
+        SHORTLINK_PROVIDERS.append({"url": _url, "api": _api})
+
+# Fallback: ensure at least the primary shortener is always present even if API is blank
+if not SHORTLINK_PROVIDERS and SHORTLINK_URL:
+    SHORTLINK_PROVIDERS.append({"url": SHORTLINK_URL, "api": SHORTLINK_API})
+
+# --------------------------------------------
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/DDNationalOfficial/9")
 SHORT_MSG = "<b><blockquote>⌯ ʜᴇʀᴇ ɪꜱ ʏᴏᴜʀ ʟɪɴᴋ, ɪꜰ ʏᴏᴜ ᴀʀᴇ ɴᴇᴡ ʜᴇʀᴇ ᴛʜᴇɴ ʏᴏᴜ ᴍᴜꜱᴛ ᴡᴀᴛᴄʜ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴄʟɪᴄᴋɪɴɢ ᴏɴ ᴅᴏᴡɴʟᴏᴀᴅ...</blockquote></b>"
 
 SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://api.aniwallpaper.workers.dev/random?type=hot")
-#--------------------------------------------
+# --------------------------------------------
 
-#--------------------------------------------
+# --------------------------------------------
 HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheEroticBhabhiOfficial\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheEroticBhabhiOfficial>TheEroticBhabhi</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @DDNationalFreeDish</blockquote>\n\n"
     f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/OfficialAdminDMRoBot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
-#--------------------------------------------
-#--------------------------------------------
+# --------------------------------------------
+# --------------------------------------------
 START_MSG = (
     f"<blockquote>👤 <b>{small_caps('ᴡᴇʟᴄᴏᴍᴇ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @DDNationalFreeDish</blockquote>\n"
@@ -99,36 +151,35 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /count :</b> ᴄᴏᴜɴᴛ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴs
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇғᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
-#--------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @DDNationalFreeDish</b>") #set your Custom Caption here, Keep None for Disable Custom Caption
-PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False #set True if you want to prevent users from forwarding files from bot
-#--------------------------------------------
-#Set true if you want Disable your Channel Posts Share button
+# --------------------------------------------
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @DDNationalFreeDish</b>")
+PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
+# --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'True'
-#--------------------------------------------
+# --------------------------------------------
 BOT_STATS_TEXT = f"<blockquote>⏳ <b>{small_caps('sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ')}</b>\n{{uptime}}</blockquote>"
 USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ')}</b>\n{small_caps('ᴀᴅᴍɪɴ ᴘʀɪᴠɪʟᴇɢᴇs ʀᴇǫᴜɪʀᴇᴅ.')}</blockquote>"
 
-#==========================(BUY PREMIUM)====================#
+# ==========================(BUY PREMIUM)====================#
 
 OWNER_TAG = os.environ.get("OWNER_TAG", "OfficialAdminDMRoBot")
 UPI_ID = os.environ.get("UPI_ID", "uneven@ikwik")
 QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/ZR2x7YSJ/photo-2026-01-03-23-54-09.jpg")
 SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/OfficialAdminDMRoBot")
-#--------------------------------------------
-#Time and its price
-#7 Days
+# --------------------------------------------
+# Time and its price
+# 7 Days
 PRICE1 = os.environ.get("PRICE1", "₹ 60")
-#1 Month
+# 1 Month
 PRICE2 = os.environ.get("PRICE2", "₹ 1100")
-#3 Month
+# 3 Month
 PRICE3 = os.environ.get("PRICE3", "₹ 260")
-#6 Month
+# 6 Month
 PRICE4 = os.environ.get("PRICE4", "₹ 500")
-#1 Year
+# 1 Year
 PRICE5 = os.environ.get("PRICE5", "₹ 900")
 
-#===================(END)========================#
+# ===================(END)========================#
 
 LOG_FILE_NAME = "filesharingbot.txt"
 
@@ -150,4 +201,3 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 def LOGGER(name: str) -> logging.Logger:
     return logging.getLogger(name)
-   
