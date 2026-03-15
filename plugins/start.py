@@ -43,14 +43,10 @@ async def short_url(client: Client, message: Message, base64_string):
         masked_link = await create_masked_link(short_link)
 
         buttons = [
-            [
-                InlineKeyboardButton(text="ᴅᴏᴡɴʟᴏᴀᴅ", url=masked_link),
-                InlineKeyboardButton(text="ᴛᴜᴛᴏʀɪᴀʟ", url=TUT_VID)
-            ],
-            [
-                InlineKeyboardButton(text="ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")
-            ]
-        ]
+                        [InlineKeyboardButton("🔰 ᴏᴘᴇɴ ʟɪɴᴋ 🔰", url=masked_link)],
+                        [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
+                        [InlineKeyboardButton("• ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •", callback_data="premium")]
+                    ]
 
         await message.reply_photo(
             photo=SHORTENER_PIC,
@@ -174,7 +170,7 @@ async def start_command(client: Client, message: Message):
 
         if FILE_AUTO_DELETE > 0:
             notification_msg = await message.reply(
-                f"<b>Tʜɪs Fɪʟᴇ ᴡɪʟʟ ʙᴇ Dᴇʟᴇᴛᴇᴅ ɪɴ  {get_exp_time(FILE_AUTO_DELETE)}. Pʟᴇᴀsᴇ sᴀᴠᴇ ᴏʀ ғᴏʀᴡᴀʀᴅ ɪᴛ ᴛᴏ ʏᴏᴜʀ sᴀᴠᴇᴅ ᴍᴇssᴀɢᴇs ʙᴇғᴏʀᴇ ɪᴛ ɢᴇᴛs Dᴇʟᴇᴛᴇᴅ.</b>"
+                f"<b>Tʜɪs Fɪʟᴇ ᴡɪʟʟ ʙᴇ Dᴇʟᴇᴛᴇᴅ ɪɴ  {get_exp_time(FILE_AUTO_DELETE)}.</b>"
             )
 
             await asyncio.sleep(FILE_AUTO_DELETE)
@@ -374,9 +370,9 @@ async def add_premium_user_command(client, msg):
         await client.send_message(
             chat_id=user_id,
             text=(
-                f"🎉 Premium Activated!\n\n"
+                f"🎉 𝗣𝗿𝗲𝗺𝗶𝘂𝗺 𝗔𝗰𝘁𝗶𝘃𝗮𝘁𝗲𝗱!\n"
                 f"You have received premium access for `{time_value} {time_unit}`.\n"
-                f"Expires on: `{expiration_time}`"
+                f"Expires on: `{expiration_time}`."
             ),
         )
 
