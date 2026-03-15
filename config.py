@@ -59,28 +59,28 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://api.aniwallpaper.workers.dev/i/
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "mdiskshort.in")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "b0900e07e0bbb3d0fd7c218247792d03d9bd7866")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "arolinks.com")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "3c41df8026a8c7adff4a7f801b47da074ff992cb")
 
 # Shortener 2
-SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "")
-SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "")
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "mdiskshort.in")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "b0900e07e0bbb3d0fd7c218247792d03d9bd7866")
 
 # Shortener 3
-SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "")
-SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "")
+SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "urllinkshort.in")
+SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "f06d773b5855747d387da0b37c28c963a142d808")
 
 # Shortener 4
-SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "")
-SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "")
+SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "ez4short.com")
+SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "2780816a26f4e63c4862ae609c046386b504f414")
 
 # Shortener 5
-SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "")
-SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "")
+SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "droplink.co")
+SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "bc37f7895a5a0df6e03aa28bb6cead99d296ff39")
 
 # Shortener 6
-SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "")
-SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "")
+SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "vplink.in")
+SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "363faa03debfedecf6f42b7d9739ad0ea5bbf48f")
 
 # Build list of active shorteners (those where both URL and API are non-empty)
 SHORTLINK_PROVIDERS = []
