@@ -1,5 +1,5 @@
-#(©)CodeFlix_Bots
-#rohit_1888 on Tg #Dont remove this line
+# (©)CodeFlix_Bots
+# rohit_1888 on Tg #Dont remove this line
 
 import base64
 import re
@@ -14,7 +14,6 @@ from pyrogram.errors import FloodWait
 from database.database import *
 
 
-
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
 #
@@ -27,27 +26,15 @@ from database.database import *
 # All rights reserved.
 #
 
-#used for cheking if a user is admin ~Owner also treated as admin level
+# used for checking if a user is admin ~Owner also treated as admin level
 async def check_admin(filter, client, update):
     try:
-        user_id = update.from_user.id       
+        user_id = update.from_user.id
         return any([user_id == OWNER_ID, await db.admin_exist(user_id)])
     except Exception as e:
         print(f"! Exception in check_admin: {e}")
         return False
 
-
-# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
-# Ask Doubt on telegram @CodeflixSupport
-#
-# Copyright (C) 2025 by Codeflix-Bots@Github, < https://github.com/Codeflix-Bots >.
-#
-# This file is part of < https://github.com/Codeflix-Bots/FileStore > project,
-# and is released under the MIT License.
-# Please see < https://github.com/Codeflix-Bots/FileStore/blob/master/LICENSE >
-#
-# All rights reserved.
-#
 
 async def is_subscribed(client, user_id):
     channel_ids = await db.show_channels()
@@ -60,10 +47,9 @@ async def is_subscribed(client, user_id):
 
     for cid in channel_ids:
         if not await is_sub(client, user_id, cid):
-            # Retry once if join request might be processing
             mode = await db.get_channel_mode(cid)
             if mode == "on":
-                await asyncio.sleep(2)  # give time for @on_chat_join_request to process
+                await asyncio.sleep(2)
                 if await is_sub(client, user_id, cid):
                     continue
             return False
@@ -71,23 +57,10 @@ async def is_subscribed(client, user_id):
     return True
 
 
-# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
-# Ask Doubt on telegram @CodeflixSupport
-#
-# Copyright (C) 2025 by Codeflix-Bots@Github, < https://github.com/Codeflix-Bots >.
-#
-# This file is part of < https://github.com/Codeflix-Bots/FileStore > project,
-# and is released under the MIT License.
-# Please see < https://github.com/Codeflix-Bots/FileStore/blob/master/LICENSE >
-#
-# All rights reserved.
-#
-
 async def is_sub(client, user_id, channel_id):
     try:
         member = await client.get_chat_member(channel_id, user_id)
         status = member.status
-        #print(f"[SUB] User {user_id} in {channel_id} with status {status}")
         return status in {
             ChatMemberStatus.OWNER,
             ChatMemberStatus.ADMINISTRATOR,
@@ -98,26 +71,12 @@ async def is_sub(client, user_id, channel_id):
         mode = await db.get_channel_mode(channel_id)
         if mode == "on":
             exists = await db.req_user_exist(channel_id, user_id)
-            #print(f"[REQ] User {user_id} join request for {channel_id}: {exists}")
             return exists
-        #print(f"[NOT SUB] User {user_id} not in {channel_id} and mode != on")
         return False
 
     except Exception as e:
         print(f"[!] Error in is_sub(): {e}")
         return False
-
-# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
-# Ask Doubt on telegram @CodeflixSupport
-#
-# Copyright (C) 2025 by Codeflix-Bots@Github, < https://github.com/Codeflix-Bots >.
-#
-# This file is part of < https://github.com/Codeflix-Bots/FileStore > project,
-# and is released under the MIT License.
-# Please see < https://github.com/Codeflix-Bots/FileStore/blob/master/LICENSE >
-#
-# All rights reserved.
-#
 
 
 async def encode(string):
@@ -126,18 +85,20 @@ async def encode(string):
     base64_string = (base64_bytes.decode("ascii")).strip("=")
     return base64_string
 
+
 async def decode(base64_string):
-    base64_string = base64_string.strip("=") # links generated before this commit will be having = sign, hence striping them to handle padding errors.
+    base64_string = base64_string.strip("=")
     base64_bytes = (base64_string + "=" * (-len(base64_string) % 4)).encode("ascii")
-    string_bytes = base64.urlsafe_b64decode(base64_bytes) 
+    string_bytes = base64.urlsafe_b64decode(base64_bytes)
     string = string_bytes.decode("ascii")
     return string
+
 
 async def get_messages(client, message_ids):
     messages = []
     total_messages = 0
     while total_messages != len(message_ids):
-        temb_ids = message_ids[total_messages:total_messages+200]
+        temb_ids = message_ids[total_messages:total_messages + 200]
         try:
             msgs = await client.get_messages(
                 chat_id=client.db_channel.id,
@@ -155,6 +116,7 @@ async def get_messages(client, message_ids):
         messages.extend(msgs)
     return messages
 
+
 async def get_message_id(client, message):
     if message.forward_from_chat:
         if message.forward_from_chat.id == client.db_channel.id:
@@ -165,7 +127,7 @@ async def get_message_id(client, message):
         return 0
     elif message.text:
         pattern = "https://t.me/(?:c/)?(.*)/(\d+)"
-        matches = re.match(pattern,message.text)
+        matches = re.match(pattern, message.text)
         if not matches:
             return 0
         channel_id = matches.group(1)
@@ -211,18 +173,6 @@ def get_exp_time(seconds):
             result += f'{int(period_value)} {period_name}'
     return result
 
-# Don't Remove Credit @CodeFlix_Bots, @rohit_1888
-# Ask Doubt on telegram @CodeflixSupport
-#
-# Copyright (C) 2025 by Codeflix-Bots@Github, < https://github.com/Codeflix-Bots >.
-#
-# This file is part of < https://github.com/Codeflix-Bots/FileStore > project,
-# and is released under the MIT License.
-# Please see < https://github.com/Codeflix-Bots/FileStore/blob/master/LICENSE >
-#
-# All rights reserved.
-#
-
 
 async def get_shortlink(url, api, link):
     shortzy = Shortzy(api_key=api, base_site=url)
@@ -230,31 +180,58 @@ async def get_shortlink(url, api, link):
     return link
 
 
+async def get_shortlink_for_user(user_id: int, long_url: str) -> str:
+    """
+    Pick the correct shortener for this user based on their rotation index,
+    shorten the URL, advance the index for next time, and return the short link.
+
+    Rotation order: provider[0] → provider[1] → ... → provider[N-1] → provider[0] → ...
+    Each user gets a different provider on each successive request so that the same
+    IP / user never hits the same shortener twice in a row (important because most
+    shorteners only pay once per unique IP per day).
+    """
+    providers = SHORTLINK_PROVIDERS  # list of {"url": ..., "api": ...}
+    total = len(providers)
+
+    if total == 0:
+        return long_url  # fallback: return unshortened
+
+    if total == 1:
+        # Only one provider — use it directly (old behaviour)
+        provider = providers[0]
+        return await get_shortlink(provider["url"], provider["api"], long_url)
+
+    # Get which shortener this user should use now
+    idx = await db.get_user_shortener_index(user_id)
+    # Clamp in case providers list shrank after last save
+    idx = idx % total
+    provider = providers[idx]
+
+    # Advance the index for the next request
+    await db.increment_user_shortener_index(user_id, total)
+
+    return await get_shortlink(provider["url"], provider["api"], long_url)
+
+
 async def create_masked_link(target_url: str) -> str:
     """Generate a hashed masked link for the given target URL."""
     from plugins.crypto_hash import generate_hash_id
     from config import BASE_URL, LOGGER
-    
+
     try:
-        # Get the selected algorithm from DB
         algorithm = await db.get_hash_algorithm()
-        
-        # Generate the hash ID
         hash_id = generate_hash_id(algorithm, target_url)
-        
-        # Store the mapping in DB
         await db.store_masked_link(hash_id, target_url, algorithm)
-        
-        # Build the masked URL
+
         base = BASE_URL.rstrip('/') if BASE_URL else ""
         if not base:
             LOGGER(__name__).warning("BASE_URL is not set! Masked link will not work.")
             return target_url
         if not base.startswith("http"):
             base = f"https://{base}"
-        
+
         return f"{base}/r/{hash_id}"
-        
+
     except Exception as e:
         LOGGER(__name__).error(f"Masking Error: {e}")
         return target_url
@@ -263,7 +240,7 @@ async def create_masked_link(target_url: str) -> str:
 subscribed = filters.create(is_subscribed)
 admin = filters.create(check_admin)
 
-#rohit_1888 on Tg :
+# rohit_1888 on Tg :
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
