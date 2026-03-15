@@ -67,25 +67,28 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             chat_id=query.message.chat.id,
             photo=QR_PIC,
             caption=(
-                f"👋 {query.from_user.username}\n\n"
-                f"🎖️ Available Plans :\n\n"
-                f"● {PRICE1}  For 0 Days Prime Membership\n\n"
-                f"● {PRICE2}  For 1 Month Prime Membership\n\n"
-                f"● {PRICE3}  For 3 Months Prime Membership\n\n"
-                f"● {PRICE4}  For 6 Months Prime Membership\n\n"
-                f"● {PRICE5}  For 1 Year Prime Membership\n\n\n"
-                f"💵 ASK UPI ID TO ADMIN AND PAY THERE -  <code>{UPI_ID}</code>\n\n\n"
-                f"♻️ After Payment You Will Get Instant Membership \n\n\n"
-                f"‼️ Must Send Screenshot after payment & If anyone want custom time membrship then ask admin"
+                f"<blockquote>✨ <b>𝗣𝗿𝗲𝗺𝗶𝘂𝗺 𝗣𝗹𝗮𝗻𝘀 — {query.from_user.first_name}</b></blockquote>\n\n"
+                
+                f"<blockquote>💎 <b>ℕ𝕠𝕣𝕞𝕒𝕝 𝐏𝕣𝕖𝕞𝕚𝕦𝕞 </b></blockquote>\n"
+                f"<blockquote>ᴢᴇʀᴏ ᴀᴅs • ᴜɴʟɪᴍɪᴛᴇᴅ ᴠɪᴇᴡs</blockquote>\n"
+                f"<blockquote>• {PRICE1} — 𝟷𝟶 ᴅᴀʏs\n"
+                f"• {PRICE2} — 𝟶𝟷 ᴍᴏɴᴛʜ\n"
+                f"• {PRICE3} — 𝟶𝟹 ᴍᴏɴᴛʜs\n"
+                f"• {PRICE4} — 𝟶6 ᴍᴏɴᴛʜs\n"
+                f"• {PRICE5} — 𝟶𝟷 ʏᴇᴀʀ</blockquote>\n\n"
+                
+                f"<blockquote>💳 <b>ᴘᴀʏ ᴠɪᴀ ᴜᴘɪ ɪᴅ:</b></blockquote>"
+                f"<code>{UPI_ID}</code>\n"
+                f"<blockquote>(Tap to copy UPI)</blockquote>\n\n"
+                
+                f"<blockquote><b>📝 ɪᴍᴘᴏʀᴛᴀɴᴛ ɪɴsᴛʀᴜᴄᴛɪᴏɴs:</b></blockquote>\n"
+                f"<blockquote>1️⃣ ᴘᴀʏ ᴛʜᴇ ᴀᴍᴏᴜɴᴛ ᴠɪᴀ ᴜᴘɪ.\n"
+                f"2️⃣ ᴄʟɪᴄᴋ 'sᴇɴᴅ sᴄʀᴇᴇɴsʜᴏᴛ' ʙᴇʟᴏᴡ.</blockquote>"
             ),
             reply_markup=InlineKeyboardMarkup(
                 [
-                    [
-                        InlineKeyboardButton(
-                            "ADMIN 24/7", url=(SCREENSHOT_URL)
-                        )
-                    ],
-                    [InlineKeyboardButton("🔒 Close", callback_data="close")],
+                    [InlineKeyboardButton("👨‍💻 sᴇɴᴅ ᴘᴀʏᴍᴇɴᴛ sᴄʀᴇᴇɴsʜᴏᴛ", url=(SCREENSHOT_URL))],
+                    [InlineKeyboardButton("✖️ ᴄʟᴏsᴇ ᴍᴇɴᴜ", callback_data="close")],
                 ]
             )
         )
