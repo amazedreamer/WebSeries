@@ -1,5 +1,5 @@
-#Codeflix_Botz
-#rohit_1888 on Tg
+# Codeflix_Botz
+# rohit_1888 on Tg
 
 import motor, asyncio
 import motor.motor_asyncio
@@ -21,6 +21,7 @@ default_verify = {
     'link': ""
 }
 
+
 def new_user(id):
     return {
         '_id': id,
@@ -31,6 +32,7 @@ def new_user(id):
             'link': ""
         }
     }
+
 
 class Rohit:
 
@@ -45,14 +47,14 @@ class Rohit:
         self.banned_user_data = self.database['banned_user']
         self.autho_user_data = self.database['autho_user']
         self.del_timer_data = self.database['del_timer']
-        self.fsub_data = self.database['fsub']   
+        self.fsub_data = self.database['fsub']
         self.rqst_fsub_data = self.database['request_forcesub']
         self.rqst_fsub_Channel_data = self.database['request_forcesub_channel']
         self.hash_settings = self.database['hash_settings']
         self.masked_links = self.database['masked_links']
         self.fingerprint_tokens = self.database['fingerprint_tokens']
-        
-
+        # Collection for per-user shortener rotation index
+        self.shortener_index_data = self.database['shortener_index']
 
     # USER DATA
     async def present_user(self, user_id: int):
@@ -71,7 +73,6 @@ class Rohit:
     async def del_user(self, user_id: int):
         await self.user_data.delete_one({'_id': user_id})
         return
-
 
     # ADMIN DATA
     async def admin_exist(self, admin_id: int):
@@ -93,7 +94,6 @@ class Rohit:
         user_ids = [doc['_id'] for doc in users_docs]
         return user_ids
 
-
     # BAN USER DATA
     async def ban_user_exist(self, user_id: int):
         found = await self.banned_user_data.find_one({'_id': user_id})
@@ -114,10 +114,8 @@ class Rohit:
         user_ids = [doc['_id'] for doc in users_docs]
         return user_ids
 
-
-
     # AUTO DELETE TIMER SETTINGS
-    async def set_del_timer(self, value: int):        
+    async def set_del_timer(self, value: int):
         existing = await self.del_timer_data.find_one({})
         if existing:
             await self.del_timer_data.update_one({}, {'$set': {'value': value}})
@@ -129,7 +127,6 @@ class Rohit:
         if data:
             return data.get('value', 600)
         return 0
-
 
     # CHANNEL MANAGEMENT
     async def channel_exist(self, channel_id: int):
@@ -151,8 +148,7 @@ class Rohit:
         channel_ids = [doc['_id'] for doc in channel_docs]
         return channel_ids
 
-    
-# Get current mode of a channel
+    # Get current mode of a channel
     async def get_channel_mode(self, channel_id: int):
         data = await self.fsub_data.find_one({'_id': channel_id})
         return data.get("mode", "off") if data else "off"
@@ -166,8 +162,6 @@ class Rohit:
         )
 
     # REQUEST FORCE-SUB MANAGEMENT
-
-    # Add the user to the set of users for a   specific channel
     async def req_user(self, channel_id: int, user_id: int):
         try:
             await self.rqst_fsub_Channel_data.update_one(
@@ -178,16 +172,12 @@ class Rohit:
         except Exception as e:
             print(f"[DB ERROR] Failed to add user to request list: {e}")
 
-
-    # Method 2: Remove a user from the channel set
     async def del_req_user(self, channel_id: int, user_id: int):
-        # Remove the user from the set of users for the channel
         await self.rqst_fsub_Channel_data.update_one(
-            {'_id': channel_id}, 
+            {'_id': channel_id},
             {'$pull': {'user_ids': user_id}}
         )
 
-    # Check if the user exists in the set of the channel's users
     async def req_user_exist(self, channel_id: int, user_id: int):
         try:
             found = await self.rqst_fsub_Channel_data.find_one({
@@ -197,24 +187,14 @@ class Rohit:
             return bool(found)
         except Exception as e:
             print(f"[DB ERROR] Failed to check request list: {e}")
-            return False  
-
-
-    # Method to check if a channel exists using show_channels
-    async def reqChannel_exist(self, channel_id: int):
-    # Get the list of all channel IDs from the database
-        channel_ids = await self.show_channels()
-        #print(f"All channel IDs in the database: {channel_ids}")
-
-    # Check if the given channel_id is in the list of channel IDs
-        if channel_id in channel_ids:
-            #print(f"Channel {channel_id} found in the database.")
-            return True
-        else:
-            #print(f"Channel {channel_id} NOT found in the database.")
             return False
 
-
+    async def reqChannel_exist(self, channel_id: int):
+        channel_ids = await self.show_channels()
+        if channel_id in channel_ids:
+            return True
+        else:
+            return False
 
     # VERIFICATION MANAGEMENT
     async def db_verify_status(self, user_id):
@@ -238,32 +218,27 @@ class Rohit:
         current['link'] = link
         await self.db_update_verify_status(user_id, current)
 
-    # Set verify count (overwrite with new value)
     async def set_verify_count(self, user_id: int, count: int):
         await self.sex_data.update_one({'_id': user_id}, {'$set': {'verify_count': count}}, upsert=True)
 
-    # Get verify count (default to 0 if not found)
     async def get_verify_count(self, user_id: int):
         user = await self.sex_data.find_one({'_id': user_id})
         if user:
             return user.get('verify_count', 0)
         return 0
 
-    # Reset all users' verify counts to 0
     async def reset_all_verify_counts(self):
         await self.sex_data.update_many(
             {},
-            {'$set': {'verify_count': 0}} 
+            {'$set': {'verify_count': 0}}
         )
 
-    # Get total verify count across all users
     async def get_total_verify_count(self):
         pipeline = [
             {"$group": {"_id": None, "total": {"$sum": "$verify_count"}}}
         ]
         result = await self.sex_data.aggregate(pipeline).to_list(length=1)
         return result[0]["total"] if result else 0
-
 
     # HASH ALGORITHM SETTINGS
     async def set_hash_algorithm(self, algo: str):
@@ -319,12 +294,34 @@ class Rohit:
         if time.time() > doc['expires']:
             await self.fingerprint_tokens.delete_one({'_id': token})
             return False
-        # Mark as used
         await self.fingerprint_tokens.update_one(
             {'_id': token},
             {'$set': {'used': True}}
         )
         return True
+
+    # ================================================================
+    # PER-USER SHORTENER ROTATION
+    # Stores which shortener index (0-based) each user should use next.
+    # After use the index is incremented and wraps around the active list.
+    # ================================================================
+
+    async def get_user_shortener_index(self, user_id: int) -> int:
+        """Return the current shortener index for this user (0-based). Default 0."""
+        doc = await self.shortener_index_data.find_one({'_id': user_id})
+        if doc:
+            return doc.get('index', 0)
+        return 0
+
+    async def increment_user_shortener_index(self, user_id: int, total_providers: int):
+        """Advance the user's shortener index to the next one (wraps around)."""
+        current = await self.get_user_shortener_index(user_id)
+        next_index = (current + 1) % total_providers
+        await self.shortener_index_data.update_one(
+            {'_id': user_id},
+            {'$set': {'index': next_index}},
+            upsert=True
+        )
 
 
 db = Rohit(DB_URI, DB_NAME)
