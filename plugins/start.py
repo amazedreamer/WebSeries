@@ -34,24 +34,38 @@ from database.db_premium import *
 BAN_SUPPORT = f"{BAN_SUPPORT}"
 TUT_VID = f"{TUT_VID}"
 
+
 async def short_url(client: Client, message: Message, base64_string):
+    """
+    Generate a verification/shortener link for a non-premium user.
+
+    Uses per-user URL shortener rotation so that:
+    - Each successive request from the same user hits a different shortener.
+    - This avoids repeated impressions on the same shortener from the same IP,
+      since most shorteners only pay once per unique IP per day.
+
+    Rotation order (per user):
+        Shortener 1 → Shortener 2 → ... → Shortener N → Shortener 1 → ...
+    """
     try:
+        user_id = message.from_user.id
         prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
-        short_link = await get_shortlink(SHORTLINK_URL, SHORTLINK_API, prem_link)
-        
+
+        # Use per-user rotating shortener instead of always the same one
+        short_link = await get_shortlink_for_user(user_id, prem_link)
+
         # Mask the shortener link with hashed URL
         masked_link = await create_masked_link(short_link)
 
         buttons = [
-                        [InlineKeyboardButton("🔰 ᴏᴘᴇɴ ʟɪɴᴋ 🔰", url=masked_link)],
-                        [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
-                        [InlineKeyboardButton("• ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •", callback_data="premium")]
-                    ]
+            [InlineKeyboardButton("🔰 ᴏᴘᴇɴ ʟɪɴᴋ 🔰", url=masked_link)],
+            [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
+            [InlineKeyboardButton("• ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •", callback_data="premium")]
+        ]
 
         await message.reply_photo(
             photo=SHORTENER_PIC,
-            caption=SHORT_MSG.format(
-            ),
+            caption=SHORT_MSG.format(),
             reply_markup=InlineKeyboardMarkup(buttons),
         )
 
@@ -175,10 +189,10 @@ async def start_command(client: Client, message: Message):
 
             await asyncio.sleep(FILE_AUTO_DELETE)
 
-            for snt_msg in codeflix_msgs:    
+            for snt_msg in codeflix_msgs:
                 if snt_msg:
-                    try:    
-                        await snt_msg.delete()  
+                    try:
+                        await snt_msg.delete()
                     except Exception as e:
                         print(f"Error deleting message {snt_msg.id}: {e}")
 
@@ -201,13 +215,11 @@ async def start_command(client: Client, message: Message):
     else:
         reply_markup = InlineKeyboardMarkup(
             [
-                    [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/Nova_Flix/50")],
-
-    [
-                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data = "about"),
-                    InlineKeyboardButton('ʜᴇʟᴘ •', callback_data = "help")
-
-    ]
+                [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/Nova_Flix/50")],
+                [
+                    InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
+                    InlineKeyboardButton('ʜᴇʟᴘ •', callback_data="help")
+                ]
             ]
         )
         await message.reply_photo(
@@ -221,19 +233,18 @@ async def start_command(client: Client, message: Message):
             ),
             reply_markup=reply_markup,
             message_effect_id=5104841245755180586)  # 🔥
-        
+
         return
 
 
-
-#=====================================================================================##
+# =====================================================================================##
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
 # Ask Doubt on telegram @CodeflixSupport
 
 
-
 # Create a global dictionary to store chat data
 chat_data_cache = {}
+
 
 async def not_joined(client: Client, message: Message):
     temp = await message.reply("<b><i>Checking Subscription...</i></b>")
@@ -243,15 +254,14 @@ async def not_joined(client: Client, message: Message):
     count = 0
 
     try:
-        all_channels = await db.show_channels()  # Should return list of (chat_id, mode) tuples
+        all_channels = await db.show_channels()
         for total, chat_id in enumerate(all_channels, start=1):
-            mode = await db.get_channel_mode(chat_id)  # fetch mode 
+            mode = await db.get_channel_mode(chat_id)
 
             await message.reply_chat_action(ChatAction.TYPING)
 
             if not await is_sub(client, user_id, chat_id):
                 try:
-                    # Cache chat info
                     if chat_id in chat_data_cache:
                         data = chat_data_cache[chat_id]
                     else:
@@ -260,22 +270,21 @@ async def not_joined(client: Client, message: Message):
 
                     name = data.title
 
-                    # Generate proper invite link based on the mode
                     if mode == "on" and not data.username:
                         invite = await client.create_chat_invite_link(
                             chat_id=chat_id,
                             creates_join_request=True,
                             expire_date=datetime.utcnow() + timedelta(seconds=FSUB_LINK_EXPIRY) if FSUB_LINK_EXPIRY else None
-                            )
+                        )
                         link = invite.invite_link
-
                     else:
                         if data.username:
                             link = f"https://t.me/{data.username}"
                         else:
                             invite = await client.create_chat_invite_link(
                                 chat_id=chat_id,
-                                expire_date=datetime.utcnow() + timedelta(seconds=FSUB_LINK_EXPIRY) if FSUB_LINK_EXPIRY else None)
+                                expire_date=datetime.utcnow() + timedelta(seconds=FSUB_LINK_EXPIRY) if FSUB_LINK_EXPIRY else None
+                            )
                             link = invite.invite_link
 
                     buttons.append([InlineKeyboardButton(text=name, url=link)])
@@ -289,7 +298,6 @@ async def not_joined(client: Client, message: Message):
                         f"<blockquote expandable><b>Rᴇᴀsᴏɴ:</b> {e}</blockquote>"
                     )
 
-        # Retry Button
         try:
             buttons.append([
                 InlineKeyboardButton(
@@ -319,19 +327,17 @@ async def not_joined(client: Client, message: Message):
             f"<blockquote expandable><b>Rᴇᴀsᴏɴ:</b> {e}</blockquote>"
         )
 
-#=====================================================================================##
+
+# =====================================================================================##
 
 @Bot.on_message(filters.command('myplan') & filters.private)
 async def check_plan(client: Client, message: Message):
-    user_id = message.from_user.id  # Get user ID from the message
-
-    # Get the premium status of the user
+    user_id = message.from_user.id
     status_message = await check_user_plan(user_id)
-
-    # Send the response message to the user
     await message.reply(status_message)
 
-#=====================================================================================##
+
+# =====================================================================================##
 # Command to add premium user
 @Bot.on_message(filters.command('addpremium') & filters.private & admin)
 async def add_premium_user_command(client, msg):
@@ -355,18 +361,15 @@ async def add_premium_user_command(client, msg):
     try:
         user_id = int(msg.command[1])
         time_value = int(msg.command[2])
-        time_unit = msg.command[3].lower()  # supports: s, m, h, d, y
+        time_unit = msg.command[3].lower()
 
-        # Call add_premium function
         expiration_time = await add_premium(user_id, time_value, time_unit)
 
-        # Notify the admin
         await msg.reply_text(
             f"✅ User `{user_id}` added as a premium user for {time_value} {time_unit}.\n"
             f"Expiration Time: `{expiration_time}`"
         )
 
-        # Notify the user
         await client.send_message(
             chat_id=user_id,
             text=(
@@ -377,98 +380,109 @@ async def add_premium_user_command(client, msg):
         )
 
     except ValueError:
-        await msg.reply_text("❌ Invalid input. Please ensure user ID and time value are numbers.")
-    except Exception as e:
-        await msg.reply_text(f"⚠️ An error occurred: `{str(e)}`")
+        await msg.reply_text("❌ Invalid input. Please provide a valid user ID and time.")
 
 
-# Command to remove premium user
+# =====================================================================================##
 @Bot.on_message(filters.command('remove_premium') & filters.private & admin)
-async def pre_remove_user(client: Client, msg: Message):
+async def remove_premium_user_command(client, msg):
     if len(msg.command) != 2:
-        await msg.reply_text("useage: /remove_premium user_id ")
+        await msg.reply_text("Usage: /remove_premium <user_id>")
         return
+
     try:
         user_id = int(msg.command[1])
         await remove_premium(user_id)
-        await msg.reply_text(f"User {user_id} has been removed.")
+        await msg.reply_text(f"✅ Premium removed from user `{user_id}`.")
     except ValueError:
-        await msg.reply_text("user_id must be an integer or not available in database.")
+        await msg.reply_text("❌ Invalid user ID.")
 
 
-# Command to list active premium users
+# =====================================================================================##
 @Bot.on_message(filters.command('premium_users') & filters.private & admin)
-async def list_premium_users_command(client, message):
-    # Define IST timezone
-    ist = timezone("Asia/Kolkata")
+async def list_premium_users_command(client, msg):
+    users = await list_premium_users()
+    if not users:
+        await msg.reply_text("No premium users found.")
+        return
 
-    # Retrieve all users from the collection
-    premium_users_cursor = collection.find({})
-    premium_user_list = ['Active Premium Users in database:']
-    current_time = datetime.now(ist)  # Get current time in IST
+    text = "<b>Premium Users:</b>\n\n"
+    for u in users:
+        text += f"• {u}\n"
 
-    # Use async for to iterate over the async cursor
-    async for user in premium_users_cursor:
-        user_id = user["user_id"]
-        expiration_timestamp = user["expiration_timestamp"]
-
-        try:
-            # Convert expiration_timestamp to a timezone-aware datetime object in IST
-            expiration_time = datetime.fromisoformat(expiration_timestamp).astimezone(ist)
-
-            # Calculate remaining time
-            remaining_time = expiration_time - current_time
-
-            if remaining_time.total_seconds() <= 0:
-                # Remove expired users from the database
-                await collection.delete_one({"user_id": user_id})
-                continue  # Skip to the next user if this one is expired
-
-            # If not expired, retrieve user info
-            user_info = await client.get_users(user_id)
-            username = user_info.username if user_info.username else "No Username"
-            first_name = user_info.first_name
-            mention=user_info.mention
-
-            # Calculate days, hours, minutes, seconds left
-            days, hours, minutes, seconds = (
-                remaining_time.days,
-                remaining_time.seconds // 3600,
-                (remaining_time.seconds // 60) % 60,
-                remaining_time.seconds % 60,
-            )
-            expiry_info = f"{days}d {hours}h {minutes}m {seconds}s left"
-
-            # Add user details to the list
-            premium_user_list.append(
-                f"UserID: <code>{user_id}</code>\n"
-                f"User: @{username}\n"
-                f"Name: {mention}\n"
-                f"Expiry: {expiry_info}"
-            )
-        except Exception as e:
-            premium_user_list.append(
-                f"UserID: <code>{user_id}</code>\n"
-                f"Error: Unable to fetch user details ({str(e)})"
-            )
-
-    if len(premium_user_list) == 1:  # No active users found
-        await message.reply_text("I found 0 active premium users in my DB")
-    else:
-        await message.reply_text("\n\n".join(premium_user_list), parse_mode=None)
+    await msg.reply_text(text)
 
 
-#=====================================================================================##
+# =====================================================================================##
 
-@Bot.on_message(filters.command("count") & filters.private & admin)
-async def total_verify_count_cmd(client, message: Message):
-    total = await db.get_total_verify_count()
-    await message.reply_text(f"Tᴏᴛᴀʟ ᴠᴇʀɪғɪᴇᴅ ᴛᴏᴋᴇɴs ᴛᴏᴅᴀʏ: <b>{total}</b>")
+@Bot.on_callback_query(filters.regex("about"))
+async def about_callback(client: Client, query: CallbackQuery):
+    buttons = [[InlineKeyboardButton('« ʙᴀᴄᴋ', callback_data='home')]]
+    await query.message.edit_caption(
+        caption=ABOUT_TXT,
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
 
-#=====================================================================================##
+@Bot.on_callback_query(filters.regex("help"))
+async def help_callback(client: Client, query: CallbackQuery):
+    buttons = [[InlineKeyboardButton('« ʙᴀᴄᴋ', callback_data='home')]]
+    await query.message.edit_caption(
+        caption=HELP_TXT,
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
-@Bot.on_message(filters.command('commands') & filters.private & admin)
-async def bcmd(bot: Bot, message: Message):        
-    reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data = "close")]])
-    await message.reply(text=CMD_TXT, reply_markup = reply_markup, quote= True)
+
+@Bot.on_callback_query(filters.regex("home"))
+async def home_callback(client: Client, query: CallbackQuery):
+    buttons = [
+        [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/Nova_Flix/50")],
+        [
+            InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
+            InlineKeyboardButton('ʜᴇʟᴘ •', callback_data="help")
+        ]
+    ]
+    await query.message.edit_caption(
+        caption=START_MSG.format(
+            first=query.from_user.first_name,
+            last=query.from_user.last_name,
+            username=None if not query.from_user.username else '@' + query.from_user.username,
+            mention=query.from_user.mention,
+            id=query.from_user.id
+        ),
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+
+
+@Bot.on_callback_query(filters.regex("premium"))
+async def premium_callback(client: Client, query: CallbackQuery):
+    user_id = query.from_user.id
+    mention = query.from_user.mention
+
+    text = (
+        f"<blockquote>💎 <b>ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs</b></blockquote>\n\n"
+        f"<b>7 Days</b> → {PRICE1}\n"
+        f"<b>1 Month</b> → {PRICE2}\n"
+        f"<b>3 Months</b> → {PRICE3}\n"
+        f"<b>6 Months</b> → {PRICE4}\n"
+        f"<b>1 Year</b> → {PRICE5}\n\n"
+        f"<b>UPI:</b> <code>{UPI_ID}</code>\n\n"
+        f"After payment, send screenshot to @{OWNER_TAG}"
+    )
+
+    buttons = [
+        [InlineKeyboardButton("📸 ꜱᴇɴᴅ ꜱᴄʀᴇᴇɴꜱʜᴏᴛ", url=f"https://t.me/{OWNER_TAG}")],
+        [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data="home")]
+    ]
+
+    try:
+        await query.message.edit_caption(
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
+    except Exception:
+        await query.message.reply_photo(
+            photo=QR_PIC,
+            caption=text,
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
