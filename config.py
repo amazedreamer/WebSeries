@@ -28,7 +28,7 @@ def small_caps(text):
 # rohit_1888 on Tg
 # --------------------------------------------
 # Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8233380798:AAH0nKjjvG_1ff_yQ1oGrizKQO_JVol7dbU")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8502483522:AAHTX_tMpgow7G84dAXZ-TrHT2-br_3ciX0")
 APP_ID = int(os.environ.get("APP_ID", "27570787"))  # Your API ID from my.telegram.org
 API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39")  # Your API Hash from my.telegram.org
 # --------------------------------------------
@@ -41,7 +41,7 @@ PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
 # --------------------------------------------
 DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://Test:aloksingh@cluster0.iomykdc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-DB_NAME = os.environ.get("DATABASE_NAME", "FiesSNew")
+DB_NAME = os.environ.get("DATABASE_NAME", "NewUpdate")
 # --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "150"))  # 0 means no expiry
 BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/OfficialAdminDMRoBot")
