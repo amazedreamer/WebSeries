@@ -21,6 +21,8 @@ default_verify = {
     'link': ""
 }
 
+SHORTENER_COOLDOWN_SECONDS = 86400  # 24 hours
+
 
 def new_user(id):
     return {
@@ -53,8 +55,8 @@ class Rohit:
         self.hash_settings = self.database['hash_settings']
         self.masked_links = self.database['masked_links']
         self.fingerprint_tokens = self.database['fingerprint_tokens']
-        # Collection for per-user shortener rotation index
-        self.shortener_index_data = self.database['shortener_index']
+        # Per-user shortener usage tracker (time-based rotation)
+        self.shortener_tracker = self.database['shortener_tracker']
 
     # USER DATA
     async def present_user(self, user_id: int):
@@ -148,12 +150,10 @@ class Rohit:
         channel_ids = [doc['_id'] for doc in channel_docs]
         return channel_ids
 
-    # Get current mode of a channel
     async def get_channel_mode(self, channel_id: int):
         data = await self.fsub_data.find_one({'_id': channel_id})
         return data.get("mode", "off") if data else "off"
 
-    # Set mode of a channel
     async def set_channel_mode(self, channel_id: int, mode: str):
         await self.fsub_data.update_one(
             {'_id': channel_id},
@@ -191,10 +191,7 @@ class Rohit:
 
     async def reqChannel_exist(self, channel_id: int):
         channel_ids = await self.show_channels()
-        if channel_id in channel_ids:
-            return True
-        else:
-            return False
+        return channel_id in channel_ids
 
     # VERIFICATION MANAGEMENT
     async def db_verify_status(self, user_id):
@@ -228,10 +225,7 @@ class Rohit:
         return 0
 
     async def reset_all_verify_counts(self):
-        await self.sex_data.update_many(
-            {},
-            {'$set': {'verify_count': 0}}
-        )
+        await self.sex_data.update_many({}, {'$set': {'verify_count': 0}})
 
     async def get_total_verify_count(self):
         pipeline = [
@@ -267,13 +261,12 @@ class Rohit:
         return await self.masked_links.find_one({'_id': hash_id})
 
     async def mark_link_used(self, hash_id: str):
-        """Mark a one-time link as used (self-destruct)."""
         await self.masked_links.update_one(
             {'_id': hash_id},
             {'$set': {'used': True, 'used_at': time.time()}}
         )
 
-    # FINGERPRINT TOKENS (anti-bot verification)
+    # FINGERPRINT TOKENS
     async def store_fp_token(self, token: str, hash_id: str, expires: float):
         await self.fingerprint_tokens.insert_one({
             '_id': token,
@@ -283,7 +276,6 @@ class Rohit:
         })
 
     async def validate_fp_token(self, token: str, hash_id: str):
-        """Validate and consume a fingerprint token. Returns True if valid."""
         doc = await self.fingerprint_tokens.find_one({'_id': token})
         if not doc:
             return False
@@ -301,25 +293,77 @@ class Rohit:
         return True
 
     # ================================================================
-    # PER-USER SHORTENER ROTATION
-    # Stores which shortener index (0-based) each user should use next.
-    # After use the index is incremented and wraps around the active list.
+    # PER-USER SHORTENER ROTATION — TIME-BASED (24-hour cooldown)
+    #
+    # Each user gets a rotating slot through all active shorteners.
+    # Once a shortener is used for a user, it is locked for 24 hours
+    # for that specific user, so the shortener never gets repeated
+    # impressions from the same person within a single day.
+    #
+    # DB document shape (one per user):
+    # {
+    #   _id: user_id,
+    #   last_used_idx: 0,          # index that was last served
+    #   times: {
+    #     "0": 1700000000.0,        # unix timestamp of last use for slot 0
+    #     "1": 0.0,                 # 0 means never used
+    #     ...
+    #   }
+    # }
     # ================================================================
 
-    async def get_user_shortener_index(self, user_id: int) -> int:
-        """Return the current shortener index for this user (0-based). Default 0."""
-        doc = await self.shortener_index_data.find_one({'_id': user_id})
-        if doc:
-            return doc.get('index', 0)
-        return 0
+    async def _get_tracker_doc(self, user_id: int) -> dict:
+        doc = await self.shortener_tracker.find_one({'_id': user_id})
+        return doc or {}
 
-    async def increment_user_shortener_index(self, user_id: int, total_providers: int):
-        """Advance the user's shortener index to the next one (wraps around)."""
-        current = await self.get_user_shortener_index(user_id)
-        next_index = (current + 1) % total_providers
-        await self.shortener_index_data.update_one(
+    async def pick_shortener_for_user(self, user_id: int, total_providers: int) -> int:
+        """
+        Return the index of the best shortener to use for this user right now.
+
+        Selection logic:
+        1. Start from the slot AFTER the one last served (round-robin starting point).
+        2. Walk through all slots and pick the FIRST one whose last-use timestamp
+           is either 0 (never used) or older than 24 hours.
+        3. If ALL slots are within the 24-hour window (extremely rare — would require
+           the same user going through every shortener in under a day), fall back to
+           the slot with the OLDEST timestamp so the gap is still maximised.
+
+        This guarantees a 24-hour gap between successive uses of the same shortener
+        for the same user, so each shortener gets a unique impression count.
+        """
+        now = time.time()
+        doc = await self._get_tracker_doc(user_id)
+        last_idx = doc.get('last_used_idx', -1)
+        times = doc.get('times', {})
+
+        # Build a list of (candidate_index, last_used_timestamp) in rotation order
+        # starting right after the last served slot.
+        candidates = []
+        for offset in range(total_providers):
+            idx = (last_idx + 1 + offset) % total_providers
+            last_used = times.get(str(idx), 0.0)
+            candidates.append((idx, last_used))
+
+        # Prefer first slot that is available (never used or 24h+ ago)
+        for idx, last_used in candidates:
+            if last_used == 0.0 or (now - last_used) >= SHORTENER_COOLDOWN_SECONDS:
+                return idx
+
+        # All slots are within 24h — return the one used longest ago (minimum wait)
+        candidates.sort(key=lambda x: x[1])
+        return candidates[0][0]
+
+    async def mark_shortener_used(self, user_id: int, idx: int):
+        """Record that shortener `idx` was just served to `user_id`."""
+        now = time.time()
+        await self.shortener_tracker.update_one(
             {'_id': user_id},
-            {'$set': {'index': next_index}},
+            {
+                '$set': {
+                    'last_used_idx': idx,
+                    f'times.{idx}': now,
+                }
+            },
             upsert=True
         )
 
