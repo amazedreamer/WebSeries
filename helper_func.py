@@ -26,7 +26,6 @@ from database.database import *
 # All rights reserved.
 #
 
-# used for checking if a user is admin ~Owner also treated as admin level
 async def check_admin(filter, client, update):
     try:
         user_id = update.from_user.id
@@ -182,33 +181,36 @@ async def get_shortlink(url, api, link):
 
 async def get_shortlink_for_user(user_id: int, long_url: str) -> str:
     """
-    Pick the correct shortener for this user based on their rotation index,
-    shorten the URL, advance the index for next time, and return the short link.
+    Pick the best shortener for this user using a 24-hour time-based rotation.
 
-    Rotation order: provider[0] → provider[1] → ... → provider[N-1] → provider[0] → ...
-    Each user gets a different provider on each successive request so that the same
-    IP / user never hits the same shortener twice in a row (important because most
-    shorteners only pay once per unique IP per day).
+    How it works:
+    - Each user has a record of when they last used each shortener slot.
+    - The bot picks the next slot in rotation order that is either:
+        a) Never used by this user, OR
+        b) Was used more than 24 hours ago by this user.
+    - After picking, that slot's timestamp is updated to NOW, starting the
+      24-hour cooldown window for that user+shortener combination.
+    - This guarantees each shortener only records one unique impression per
+      user per day, so all shorteners pay properly for their views.
+
+    If only one shortener is configured, it is used directly (original behaviour).
     """
-    providers = SHORTLINK_PROVIDERS  # list of {"url": ..., "api": ...}
+    providers = SHORTLINK_PROVIDERS
     total = len(providers)
 
     if total == 0:
-        return long_url  # fallback: return unshortened
+        return long_url  # no shortener configured — return as-is
 
     if total == 1:
-        # Only one provider — use it directly (old behaviour)
         provider = providers[0]
         return await get_shortlink(provider["url"], provider["api"], long_url)
 
-    # Get which shortener this user should use now
-    idx = await db.get_user_shortener_index(user_id)
-    # Clamp in case providers list shrank after last save
-    idx = idx % total
+    # Time-based pick: find the slot with a 24h gap (or oldest used)
+    idx = await db.pick_shortener_for_user(user_id, total)
     provider = providers[idx]
 
-    # Advance the index for the next request
-    await db.increment_user_shortener_index(user_id, total)
+    # Record this use BEFORE shortening (so even on error the slot advances)
+    await db.mark_shortener_used(user_id, idx)
 
     return await get_shortlink(provider["url"], provider["api"], long_url)
 
