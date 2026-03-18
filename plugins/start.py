@@ -35,24 +35,58 @@ BAN_SUPPORT = f"{BAN_SUPPORT}"
 TUT_VID = f"{TUT_VID}"
 
 
+def _format_wait_time(seconds: int) -> str:
+    """Convert a raw seconds count into a human-readable string like '2h 30m 15s'."""
+    seconds = max(0, int(seconds))
+    parts = []
+    hours, remainder = divmod(seconds, 3600)
+    minutes, secs = divmod(remainder, 60)
+    if hours:
+        parts.append(f"{hours}h")
+    if minutes:
+        parts.append(f"{minutes}m")
+    if secs or not parts:
+        parts.append(f"{secs}s")
+    return " ".join(parts)
+
+
 async def short_url(client: Client, message: Message, base64_string):
     """
     Send the verification/shortener link message for a non-premium user.
 
-    Uses time-based per-user URL shortener rotation:
-    - Each user has a 24-hour cooldown per shortener slot.
-    - The bot picks the next available slot (not used in the last 24h).
-    - This ensures each shortener gets only one unique impression per user per day.
+    Two possible outcomes:
+    1. A shortener slot is available → show the shortened link as normal.
+    2. All shortener slots are within their 24-hour cooldown for this user
+       → show a "come back in X / buy premium" message instead.
     """
     try:
         user_id = message.from_user.id
         prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
 
-        # Time-based rotating shortener — never repeats the same shortener
-        # for the same user within 24 hours
-        short_link = await get_shortlink_for_user(user_id, prem_link)
+        short_link, wait_seconds = await get_shortlink_for_user(user_id, prem_link)
 
-        # Mask the shortener link with hashed URL
+        # ── All shorteners exhausted for today ───────────────────────────────
+        if short_link is None:
+            wait_str = _format_wait_time(wait_seconds)
+            await message.reply_photo(
+                photo=SHORTENER_PIC,
+                caption=(
+                    f"⏳ <b>ʏᴏᴜ'ᴠᴇ ᴜꜱᴇᴅ ᴀʟʟ {len(SHORTLINK_PROVIDERS)} ᴜʀʟ ꜱʜᴏʀᴛᴇɴᴇʀꜱ ᴛᴏᴅᴀʏ!</b>\n\n"
+                    f"<blockquote>ᴇᴀᴄʜ ꜱʜᴏʀᴛᴇɴᴇʀ ʜᴀꜱ ᴀ <b>24-ʜᴏᴜʀ ᴄᴏᴏʟᴅᴏᴡɴ</b> ᴘᴇʀ ᴜꜱᴇʀ.\n"
+                    f"ʏᴏᴜʀ ɴᴇxᴛ ꜱʟᴏᴛ ᴏᴘᴇɴꜱ ɪɴ: <b>{wait_str}</b></blockquote>\n\n"
+                    f"<blockquote>💎 <b>ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ</b> ꜰᴏʀ:\n"
+                    f"• ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇ ᴀᴄᴄᴇꜱꜱ\n"
+                    f"• ᴢᴇʀᴏ ᴀᴅꜱ / ꜱʜᴏʀᴛᴇɴᴇʀꜱ\n"
+                    f"• ɴᴇᴠᴇʀ ᴡᴀɪᴛ ᴀɢᴀɪɴ ✨</blockquote>"
+                ),
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ — ᴀᴅ ꜰʀᴇᴇ", callback_data="premium")],
+                    [InlineKeyboardButton(f"⏰ ᴄᴏᴍᴇ ʙᴀᴄᴋ ɪɴ {wait_str}", callback_data="close")],
+                ]),
+            )
+            return
+
+        # ── Shortener slot available — normal flow ────────────────────────────
         masked_link = await create_masked_link(short_link)
 
         buttons = [
@@ -213,7 +247,7 @@ async def start_command(client: Client, message: Message):
     else:
         reply_markup = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/TheEroticBhabhiOfficial/18")],
+                [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/Nova_Flix/50")],
                 [
                     InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
                     InlineKeyboardButton('ʜᴇʟᴘ •', callback_data="help")
