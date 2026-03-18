@@ -316,42 +316,40 @@ class Rohit:
         doc = await self.shortener_tracker.find_one({'_id': user_id})
         return doc or {}
 
-    async def pick_shortener_for_user(self, user_id: int, total_providers: int) -> int:
+    async def pick_shortener_for_user(self, user_id: int, total_providers: int) -> tuple:
         """
-        Return the index of the best shortener to use for this user right now.
+        Return (idx, is_available, wait_seconds) for the best shortener to use.
 
-        Selection logic:
-        1. Start from the slot AFTER the one last served (round-robin starting point).
-        2. Walk through all slots and pick the FIRST one whose last-use timestamp
-           is either 0 (never used) or older than 24 hours.
-        3. If ALL slots are within the 24-hour window (extremely rare — would require
-           the same user going through every shortener in under a day), fall back to
-           the slot with the OLDEST timestamp so the gap is still maximised.
+        is_available = True  → slot is ready; wait_seconds = 0.
+        is_available = False → ALL slots are within the 24-hour cooldown window.
+                               wait_seconds = seconds until the earliest slot opens.
 
-        This guarantees a 24-hour gap between successive uses of the same shortener
-        for the same user, so each shortener gets a unique impression count.
+        Selection order:
+        1. Start from the slot AFTER the one last served (round-robin).
+        2. Pick the FIRST slot that is either never used or 24h+ old.
+        3. If ALL are within 24h: return (oldest_slot, False, seconds_until_it_opens).
         """
         now = time.time()
         doc = await self._get_tracker_doc(user_id)
         last_idx = doc.get('last_used_idx', -1)
         times = doc.get('times', {})
 
-        # Build a list of (candidate_index, last_used_timestamp) in rotation order
-        # starting right after the last served slot.
         candidates = []
         for offset in range(total_providers):
             idx = (last_idx + 1 + offset) % total_providers
             last_used = times.get(str(idx), 0.0)
             candidates.append((idx, last_used))
 
-        # Prefer first slot that is available (never used or 24h+ ago)
+        # First available slot (never used or cooldown expired)
         for idx, last_used in candidates:
             if last_used == 0.0 or (now - last_used) >= SHORTENER_COOLDOWN_SECONDS:
-                return idx
+                return (idx, True, 0)
 
-        # All slots are within 24h — return the one used longest ago (minimum wait)
-        candidates.sort(key=lambda x: x[1])
-        return candidates[0][0]
+        # All slots exhausted — find which one frees up soonest
+        candidates.sort(key=lambda x: x[1])  # oldest first
+        oldest_idx, oldest_time = candidates[0]
+        wait_seconds = int(SHORTENER_COOLDOWN_SECONDS - (now - oldest_time)) + 1
+        return (oldest_idx, False, max(wait_seconds, 0))
 
     async def mark_shortener_used(self, user_id: int, idx: int):
         """Record that shortener `idx` was just served to `user_id`."""
