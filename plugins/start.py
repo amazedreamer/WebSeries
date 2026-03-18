@@ -15,7 +15,7 @@ import os
 import random
 import sys
 import re
-import string 
+import string
 import string as rohit
 import time
 from datetime import datetime, timedelta
@@ -37,21 +37,19 @@ TUT_VID = f"{TUT_VID}"
 
 async def short_url(client: Client, message: Message, base64_string):
     """
-    Generate a verification/shortener link for a non-premium user.
+    Send the verification/shortener link message for a non-premium user.
 
-    Uses per-user URL shortener rotation so that:
-    - Each successive request from the same user hits a different shortener.
-    - This avoids repeated impressions on the same shortener from the same IP,
-      since most shorteners only pay once per unique IP per day.
-
-    Rotation order (per user):
-        Shortener 1 → Shortener 2 → ... → Shortener N → Shortener 1 → ...
+    Uses time-based per-user URL shortener rotation:
+    - Each user has a 24-hour cooldown per shortener slot.
+    - The bot picks the next available slot (not used in the last 24h).
+    - This ensures each shortener gets only one unique impression per user per day.
     """
     try:
         user_id = message.from_user.id
         prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
 
-        # Use per-user rotating shortener instead of always the same one
+        # Time-based rotating shortener — never repeats the same shortener
+        # for the same user within 24 hours
         short_link = await get_shortlink_for_user(user_id, prem_link)
 
         # Mask the shortener link with hashed URL
@@ -338,7 +336,6 @@ async def check_plan(client: Client, message: Message):
 
 
 # =====================================================================================##
-# Command to add premium user
 @Bot.on_message(filters.command('addpremium') & filters.private & admin)
 async def add_premium_user_command(client, msg):
     if len(msg.command) != 4:
@@ -411,78 +408,3 @@ async def list_premium_users_command(client, msg):
         text += f"• {u}\n"
 
     await msg.reply_text(text)
-
-
-# =====================================================================================##
-
-@Bot.on_callback_query(filters.regex("about"))
-async def about_callback(client: Client, query: CallbackQuery):
-    buttons = [[InlineKeyboardButton('« ʙᴀᴄᴋ', callback_data='home')]]
-    await query.message.edit_caption(
-        caption=ABOUT_TXT,
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
-
-@Bot.on_callback_query(filters.regex("help"))
-async def help_callback(client: Client, query: CallbackQuery):
-    buttons = [[InlineKeyboardButton('« ʙᴀᴄᴋ', callback_data='home')]]
-    await query.message.edit_caption(
-        caption=HELP_TXT,
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
-
-@Bot.on_callback_query(filters.regex("home"))
-async def home_callback(client: Client, query: CallbackQuery):
-    buttons = [
-        [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/Nova_Flix/50")],
-        [
-            InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
-            InlineKeyboardButton('ʜᴇʟᴘ •', callback_data="help")
-        ]
-    ]
-    await query.message.edit_caption(
-        caption=START_MSG.format(
-            first=query.from_user.first_name,
-            last=query.from_user.last_name,
-            username=None if not query.from_user.username else '@' + query.from_user.username,
-            mention=query.from_user.mention,
-            id=query.from_user.id
-        ),
-        reply_markup=InlineKeyboardMarkup(buttons)
-    )
-
-
-@Bot.on_callback_query(filters.regex("premium"))
-async def premium_callback(client: Client, query: CallbackQuery):
-    user_id = query.from_user.id
-    mention = query.from_user.mention
-
-    text = (
-        f"<blockquote>💎 <b>ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴs</b></blockquote>\n\n"
-        f"<b>7 Days</b> → {PRICE1}\n"
-        f"<b>1 Month</b> → {PRICE2}\n"
-        f"<b>3 Months</b> → {PRICE3}\n"
-        f"<b>6 Months</b> → {PRICE4}\n"
-        f"<b>1 Year</b> → {PRICE5}\n\n"
-        f"<b>UPI:</b> <code>{UPI_ID}</code>\n\n"
-        f"After payment, send screenshot to @{OWNER_TAG}"
-    )
-
-    buttons = [
-        [InlineKeyboardButton("📸 ꜱᴇɴᴅ ꜱᴄʀᴇᴇɴꜱʜᴏᴛ", url=f"https://t.me/{OWNER_TAG}")],
-        [InlineKeyboardButton("« ʙᴀᴄᴋ", callback_data="home")]
-    ]
-
-    try:
-        await query.message.edit_caption(
-            caption=text,
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
-    except Exception:
-        await query.message.reply_photo(
-            photo=QR_PIC,
-            caption=text,
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
