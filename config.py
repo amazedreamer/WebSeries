@@ -104,7 +104,7 @@ if not SHORTLINK_PROVIDERS and SHORTLINK_URL:
 TUT_VID = os.environ.get("TUT_VID", "https://t.me/DDNationalOfficial/9")
 SHORT_MSG = "<b><blockquote>⌯ ʜᴇʀᴇ ɪꜱ ʏᴏᴜʀ ʟɪɴᴋ, ɪꜰ ʏᴏᴜ ᴀʀᴇ ɴᴇᴡ ʜᴇʀᴇ ᴛʜᴇɴ ʏᴏᴜ ᴍᴜꜱᴛ ᴡᴀᴛᴄʜ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴄʟɪᴄᴋɪɴɢ ᴏɴ ᴅᴏᴡɴʟᴏᴀᴅ...</blockquote></b>"
 
-SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://api.aniwallpaper.workers.dev/random?type=hotg")
+SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://api.aniwallpaper.workers.dev/random?type=hot")
 # --------------------------------------------
 
 # --------------------------------------------
