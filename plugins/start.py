@@ -71,13 +71,13 @@ async def short_url(client: Client, message: Message, base64_string):
             await message.reply_photo(
                 photo=SHORTENER_PIC,
                 caption=(
-                    f"⏳ <b>ʏᴏᴜ'ᴠᴇ ᴜꜱᴇᴅ ᴀʟʟ {len(SHORTLINK_PROVIDERS)} ᴜʀʟ ꜱʜᴏʀᴛᴇɴᴇʀꜱ ᴛᴏᴅᴀʏ!</b>\n\n"
-                    f"<blockquote>ᴇᴀᴄʜ ꜱʜᴏʀᴛᴇɴᴇʀ ʜᴀꜱ ᴀ <b>24-ʜᴏᴜʀ ᴄᴏᴏʟᴅᴏᴡɴ</b> ᴘᴇʀ ᴜꜱᴇʀ.\n"
-                    f"ʏᴏᴜʀ ɴᴇxᴛ ꜱʟᴏᴛ ᴏᴘᴇɴꜱ ɪɴ: <b>{wait_str}</b></blockquote>\n\n"
+                    f"⏳ <b>ʏᴏᴜ'ᴠᴇ ᴜꜱᴇᴅ ᴀʟʟ {len(SHORTLINK_PROVIDERS)} ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱ ꜰᴏʀ ᴛᴏᴅᴀʏ‼️</b>\n\n"
+                    f"<blockquote>» ᴀ <b>24-ʜᴏᴜʀ ᴄᴏᴏʟᴅᴏᴡɴ</b> ⚠️.</blockquote>\n"
+                    f"<blockquote>» ʏᴏᴜʀ ɴᴇxᴛ ꜱʟᴏᴛ ᴏᴘᴇɴꜱ ɪɴ: <b>{wait_str}</b></blockquote>\n\n"
                     f"<blockquote>💎 <b>ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ</b> ꜰᴏʀ:\n"
-                    f"• ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇ ᴀᴄᴄᴇꜱꜱ\n"
-                    f"• ᴢᴇʀᴏ ᴀᴅꜱ / ꜱʜᴏʀᴛᴇɴᴇʀꜱ\n"
-                    f"• ɴᴇᴠᴇʀ ᴡᴀɪᴛ ᴀɢᴀɪɴ ✨</blockquote>"
+                    f"• ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇꜱꜱ.\n"
+                    f"• ᴢᴇʀᴏ ᴀᴅꜱ.\n"
+                    f"• ɴᴇᴠᴇʀ ᴡᴀɪᴛ ᴀɢᴀɪɴ ✨.</blockquote>"
                 ),
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ — ᴀᴅ ꜰʀᴇᴇ", callback_data="premium")],
@@ -126,8 +126,9 @@ async def start_command(client: Client, message: Message):
     banned_users = await db.get_ban_users()
     if user_id in banned_users:
         return await message.reply_text(
-            "<b>⛔️ You are Bᴀɴɴᴇᴅ from using this bot.</b>\n\n"
-            "<i>Contact support if you think this is a mistake.</i>",
+            f"<blockquote>⛔️ <b>ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ</b></blockquote>\n\n"
+                            f"<blockquote>ʏᴏᴜ ʜᴀᴠᴇ ʙᴇᴇɴ <b>ʙᴀɴɴᴇᴅ </b> ғᴏʀ ʙʏᴘᴀss ᴀᴛᴛᴇᴍᴘᴛs.</blockquote>\n"
+                            f"<blockquote>ᴡᴇ ᴅᴏ ɴᴏᴛ ᴛᴏʟᴇʀᴀᴛᴇ ᴄʜᴇᴀᴛɪɴɢ. ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ ᴛᴏ ᴀᴘᴘᴇᴀʟ.</blockquote>",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Contact Support", url=BAN_SUPPORT)]]
             )
@@ -239,7 +240,7 @@ async def start_command(client: Client, message: Message):
                 ) if reload_url else None
 
                 await notification_msg.edit(
-                    "<b>ʏᴏᴜʀ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ ɪꜱ ꜱᴜᴄᴄᴇꜱꜱꜰᴜʟʟʏ ᴅᴇʟᴇᴛᴇᴅ !!\n\nᴄʟɪᴄᴋ ʙᴇʟᴏᴡ ʙᴜᴛᴛᴏɴ ᴛᴏ ɢᴇᴛ ʏᴏᴜʀ ᴅᴇʟᴇᴛᴇᴅ ᴠɪᴅᴇᴏ / ꜰɪʟᴇ 👇</b>",
+                    "🕊️",
                     reply_markup=keyboard
                 )
             except Exception as e:
@@ -247,7 +248,7 @@ async def start_command(client: Client, message: Message):
     else:
         reply_markup = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/Nova_Flix/50")],
+                [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/TheEroticBhabhiOfficial/18")],
                 [
                     InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
                     InlineKeyboardButton('ʜᴇʟᴘ •', callback_data="help")
@@ -279,7 +280,7 @@ chat_data_cache = {}
 
 
 async def not_joined(client: Client, message: Message):
-    temp = await message.reply("<b><i>Checking Subscription...</i></b>")
+    temp = await message.reply("<b>(●'◡'●)</b>")
 
     user_id = message.from_user.id
     buttons = []
@@ -326,7 +327,7 @@ async def not_joined(client: Client, message: Message):
                 except Exception as e:
                     print(f"Error with chat {chat_id}: {e}")
                     return await temp.edit(
-                        f"<b><i>! Eʀʀᴏʀ, Cᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ᴛᴏ sᴏʟᴠᴇ ᴛʜᴇ ɪssᴜᴇs @rohit_1888</i></b>\n"
+                        f"<b><i>! Eʀʀᴏʀ, Cᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ᴛᴏ sᴏʟᴠᴇ ᴛʜᴇ ɪssᴜᴇs @sakxxii</i></b>\n"
                         f"<blockquote expandable><b>Rᴇᴀsᴏɴ:</b> {e}</blockquote>"
                     )
 
@@ -355,7 +356,7 @@ async def not_joined(client: Client, message: Message):
     except Exception as e:
         print(f"Final Error: {e}")
         await temp.edit(
-            f"<b><i>! Eʀʀᴏʀ, Cᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ᴛᴏ sᴏʟᴠᴇ ᴛʜᴇ ɪssᴜᴇs @rohit_1888</i></b>\n"
+            f"<b><i>! Eʀʀᴏʀ, Cᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ᴛᴏ sᴏʟᴠᴇ ᴛʜᴇ ɪssᴜᴇs @sakxxii</i></b>\n"
             f"<blockquote expandable><b>Rᴇᴀsᴏɴ:</b> {e}</blockquote>"
         )
 
@@ -404,9 +405,10 @@ async def add_premium_user_command(client, msg):
         await client.send_message(
             chat_id=user_id,
             text=(
-                f"🎉 𝗣𝗿𝗲𝗺𝗶𝘂𝗺 𝗔𝗰𝘁𝗶𝘃𝗮𝘁𝗲𝗱!\n"
-                f"You have received premium access for `{time_value} {time_unit}`.\n"
-                f"Expires on: `{expiration_time}`."
+                f"<blockquote>👑 <b>Pʀᴇᴍɪᴜᴍ Uᴘɢʀᴀᴅᴇ Dᴇᴛᴇᴄᴛᴇᴅ</b></blockquote>\n\n"
+                f"<blockquote>ᴄᴏɴɢʀᴀᴛᴜʟᴀᴛɪᴏɴꜱ! ʏᴏᴜ ʜᴀᴠᴇ ʙᴇᴇɴ ᴜᴘɢʀᴀᴅᴇᴅ ᴛᴏ ᴛʜᴇ <b>ꜱᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ</b>.</blockquote>\n"
+                f"<blockquote>ʏᴏᴜ ɴᴏᴡ ᴘᴏꜱꜱᴇꜱꜱ ᴜɴʀᴇꜱᴛʀɪᴄᴛᴇᴅ ᴀᴄᴄᴇꜱꜱ ᴛᴏ ᴇxᴄʟᴜꜱɪᴠᴇ ᴄᴏɴᴛᴇɴᴛ ᴀɴᴅ ꜰᴇᴀᴛᴜʀᴇꜱ ꜰᴏʀ <b>{time_value} {time_unit}</b>.</blockquote>\n\n"
+                f"<blockquote>🗓 <b>ᴇxᴘɪʀᴇꜱ ᴏɴ: </b> `{expiration_time}` </blockquote>"
             ),
         )
 
