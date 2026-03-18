@@ -179,40 +179,55 @@ async def get_shortlink(url, api, link):
     return link
 
 
-async def get_shortlink_for_user(user_id: int, long_url: str) -> str:
+async def get_shortlink_for_user(user_id: int, long_url: str):
     """
     Pick the best shortener for this user using a 24-hour time-based rotation.
+
+    Returns:
+        (short_url: str, 0)            — a working shortened URL is ready.
+        (None, wait_seconds: int)      — all shorteners are on cooldown;
+                                         wait_seconds until the earliest one frees up.
 
     How it works:
     - Each user has a record of when they last used each shortener slot.
     - The bot picks the next slot in rotation order that is either:
         a) Never used by this user, OR
         b) Was used more than 24 hours ago by this user.
-    - After picking, that slot's timestamp is updated to NOW, starting the
-      24-hour cooldown window for that user+shortener combination.
-    - This guarantees each shortener only records one unique impression per
-      user per day, so all shorteners pay properly for their views.
+    - If ALL slots are within the 24-hour window the function returns
+      (None, wait_seconds) so the caller can show a "come back later /
+       buy premium" message instead of silently reusing a spent slot.
+    - After a slot is picked it is timestamped immediately so the 24-hour
+      cooldown starts from this exact moment.
 
-    If only one shortener is configured, it is used directly (original behaviour).
+    If only one shortener is configured it is used directly (original behaviour)
+    and exhaustion is never signalled for single-provider setups.
     """
     providers = SHORTLINK_PROVIDERS
     total = len(providers)
 
     if total == 0:
-        return long_url  # no shortener configured — return as-is
+        return (long_url, 0)  # no shortener configured — return as-is
 
     if total == 1:
+        # Single provider — always use it (original behaviour, no exhaustion logic)
         provider = providers[0]
-        return await get_shortlink(provider["url"], provider["api"], long_url)
+        short = await get_shortlink(provider["url"], provider["api"], long_url)
+        return (short, 0)
 
-    # Time-based pick: find the slot with a 24h gap (or oldest used)
-    idx = await db.pick_shortener_for_user(user_id, total)
+    # Time-based pick — returns (idx, is_available, wait_seconds)
+    idx, is_available, wait_seconds = await db.pick_shortener_for_user(user_id, total)
+
+    if not is_available:
+        # All shorteners are within their 24-hour cooldown for this user
+        return (None, wait_seconds)
+
     provider = providers[idx]
 
-    # Record this use BEFORE shortening (so even on error the slot advances)
+    # Record this use BEFORE shortening (so the slot advances even on API error)
     await db.mark_shortener_used(user_id, idx)
 
-    return await get_shortlink(provider["url"], provider["api"], long_url)
+    short = await get_shortlink(provider["url"], provider["api"], long_url)
+    return (short, 0)
 
 
 async def create_masked_link(target_url: str) -> str:
