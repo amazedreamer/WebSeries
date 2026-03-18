@@ -171,7 +171,7 @@ SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/OfficialAdminDMRoBot")
 # 7 Days
 PRICE1 = os.environ.get("PRICE1", "₹ 60")
 # 1 Month
-PRICE2 = os.environ.get("PRICE2", "₹ 1100")
+PRICE2 = os.environ.get("PRICE2", "₹ 110")
 # 3 Month
 PRICE3 = os.environ.get("PRICE3", "₹ 260")
 # 6 Month
