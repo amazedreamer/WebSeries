@@ -177,15 +177,21 @@ def get_exp_time(seconds):
 
 def _generate_alias(length: int = 8) -> str:
     """
-    Generate a random alphanumeric alias for short URLs (e.g. 'xyz123ab').
+    Generate an alias in the format  __XxXxXxXx__  (e.g. __bQwxVU0T__).
 
-    Uses ONLY lowercase letters + digits — no underscores, hyphens, dots or
-    any other character that Telegram's markdown parser could misinterpret.
-    Double-underscores (__) in a URL turn the surrounding text italic in
-    Telegram and break copy-paste; this alias format prevents that entirely.
+    The double-underscore wrapping is intentional:
+    - As an inline-button URL the full link works perfectly (buttons are never
+      markdown-parsed by Telegram).
+    - If a user copies the URL text and pastes it into any Telegram chat or
+      bot, Telegram's markdown parser treats __...__ as italic formatting,
+      which corrupts the URL and defeats any copy-paste bypass attempt.
+
+    The inner random part uses mixed-case letters + digits so it matches
+    the appearance of a normal shortener token (e.g. bQwxVU0T).
     """
-    chars = string.ascii_lowercase + string.digits
-    return ''.join(random.choices(chars, k=length))
+    chars = string.ascii_letters + string.digits
+    inner = ''.join(random.choices(chars, k=length))
+    return f"__{inner}__"
 
 
 async def get_shortlink(url, api, link):
