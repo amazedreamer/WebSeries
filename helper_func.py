@@ -5,6 +5,8 @@ import base64
 import re
 import asyncio
 import time
+import random
+import string
 from pyrogram import filters
 from pyrogram.enums import ChatMemberStatus
 from config import *
@@ -173,9 +175,23 @@ def get_exp_time(seconds):
     return result
 
 
+def _generate_alias(length: int = 8) -> str:
+    """
+    Generate a random alphanumeric alias for short URLs (e.g. 'xyz123ab').
+
+    Uses ONLY lowercase letters + digits — no underscores, hyphens, dots or
+    any other character that Telegram's markdown parser could misinterpret.
+    Double-underscores (__) in a URL turn the surrounding text italic in
+    Telegram and break copy-paste; this alias format prevents that entirely.
+    """
+    chars = string.ascii_lowercase + string.digits
+    return ''.join(random.choices(chars, k=length))
+
+
 async def get_shortlink(url, api, link):
     shortzy = Shortzy(api_key=api, base_site=url)
-    link = await shortzy.convert(link)
+    alias = _generate_alias()
+    link = await shortzy.convert(link, alias=alias)
     return link
 
 
