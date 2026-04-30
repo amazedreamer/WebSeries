@@ -101,6 +101,20 @@ if not SHORTLINK_PROVIDERS and SHORTLINK_URL:
     SHORTLINK_PROVIDERS.append({"url": SHORTLINK_URL, "api": SHORTLINK_API})
 
 # --------------------------------------------
+# === BYPASS PROTECTION ======================================================
+# Minimum seconds a user must spend on the shortener before returning via the
+# verification link. If they come back faster than this, the bot treats it as
+# a bypass attempt: warns first time, then 12h ban, then 24h ban, then perma.
+BYPASS_PROTECTION_SECONDS = int(os.environ.get("BYPASS_PROTECTION_SECONDS", "90"))
+
+# === MESSAGE AUTO-EXPIRY ====================================================
+# Short-link messages and the buy-premium QR/payment message both auto-delete
+# this many seconds after being sent (if not already cleaned up by the user
+# requesting a new file or completing the verification).
+SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECONDS",   "1200"))  # 20 min
+PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
+# ============================================================================
+
 TUT_VID = os.environ.get("TUT_VID", "https://t.me/DDNationalOfficial/9")
 SHORT_MSG = "<b><blockquote>⌯ ʜᴇʀᴇ ɪꜱ ʏᴏᴜʀ ʟɪɴᴋ, ɪꜰ ʏᴏᴜ ᴀʀᴇ ɴᴇᴡ ʜᴇʀᴇ ᴛʜᴇɴ ʏᴏᴜ ᴍᴜꜱᴛ ᴡᴀᴛᴄʜ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴄʟɪᴄᴋɪɴɢ ᴏɴ ᴅᴏᴡɴʟᴏᴀᴅ...</blockquote></b>"
 
