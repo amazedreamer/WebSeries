@@ -203,53 +203,52 @@ async def get_shortlink(url, api, link):
 
 async def get_shortlink_for_user(user_id: int, long_url: str):
     """
-    Pick the best shortener for this user using a 24-hour time-based rotation.
+    Pick a shortener for this user using SEQUENTIAL, sticky rotation.
+
+    Behaviour:
+    - The bot serves shortener #1 and keeps serving it until the user
+      successfully completes it (returns to the bot via the yu3elk callback,
+      which calls db.consume_shortener_success).
+    - Only after a successful completion does the bot advance to #2, then
+      #3, ... up to the last configured slot.
+    - When the user has cleared every slot for the day they get a
+      "come back tomorrow / buy premium" message until the daily reset
+      at 00:00 IST, which wipes their progress and starts them again at #1.
 
     Returns:
-        (short_url: str, 0)            — a working shortened URL is ready.
-        (None, wait_seconds: int)      — all shorteners are on cooldown;
-                                         wait_seconds until the earliest one frees up.
+        (short_url: str, 0, idx)           — a shortened URL is ready; idx is the
+                                              0-based slot number that was served.
+        (None, wait_seconds: int, -1)      — every shortener is cleared for today;
+                                              wait_seconds = time until 00:00 IST.
 
-    How it works:
-    - Each user has a record of when they last used each shortener slot.
-    - The bot picks the next slot in rotation order that is either:
-        a) Never used by this user, OR
-        b) Was used more than 24 hours ago by this user.
-    - If ALL slots are within the 24-hour window the function returns
-      (None, wait_seconds) so the caller can show a "come back later /
-       buy premium" message instead of silently reusing a spent slot.
-    - After a slot is picked it is timestamped immediately so the 24-hour
-      cooldown starts from this exact moment.
-
-    If only one shortener is configured it is used directly (original behaviour)
-    and exhaustion is never signalled for single-provider setups.
+    Single-provider setups always return slot 0 with no exhaustion logic.
     """
     providers = SHORTLINK_PROVIDERS
     total = len(providers)
 
     if total == 0:
-        return (long_url, 0)  # no shortener configured — return as-is
+        return (long_url, 0, -1)  # no shortener configured — return as-is
 
     if total == 1:
-        # Single provider — always use it (original behaviour, no exhaustion logic)
-        provider = providers[0]
+        # Single provider — sticky logic still applies via the progress doc
+        # so success counts can be recorded, but exhaustion is never signalled.
+        idx, is_available = await db.pick_sequential_shortener(user_id, total)
+        if not is_available:
+            wait_seconds = await db.seconds_until_daily_reset()
+            return (None, wait_seconds, -1)
+        provider = providers[idx]
         short = await get_shortlink(provider["url"], provider["api"], long_url)
-        return (short, 0)
+        return (short, 0, idx)
 
-    # Time-based pick — returns (idx, is_available, wait_seconds)
-    idx, is_available, wait_seconds = await db.pick_shortener_for_user(user_id, total)
+    idx, is_available = await db.pick_sequential_shortener(user_id, total)
 
     if not is_available:
-        # All shorteners are within their 24-hour cooldown for this user
-        return (None, wait_seconds)
+        wait_seconds = await db.seconds_until_daily_reset()
+        return (None, wait_seconds, -1)
 
     provider = providers[idx]
-
-    # Record this use BEFORE shortening (so the slot advances even on API error)
-    await db.mark_shortener_used(user_id, idx)
-
     short = await get_shortlink(provider["url"], provider["api"], long_url)
-    return (short, 0)
+    return (short, 0, idx)
 
 
 async def create_masked_link(target_url: str) -> str:
