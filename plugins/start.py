@@ -16,7 +16,6 @@ import random
 import sys
 import re
 import string
-import string as rohit
 import time
 from datetime import datetime, timedelta
 from pyrogram import Client, filters, __version__
@@ -56,14 +55,15 @@ async def short_url(client: Client, message: Message, base64_string):
 
     Two possible outcomes:
     1. A shortener slot is available → show the shortened link as normal.
-    2. All shortener slots are within their 24-hour cooldown for this user
-       → show a "come back in X / buy premium" message instead.
+       The user will keep seeing the SAME shortener until they complete it.
+    2. The user has cleared every shortener for today → show a
+       "come back tomorrow / buy premium" message instead.
     """
     try:
         user_id = message.from_user.id
         prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
 
-        short_link, wait_seconds = await get_shortlink_for_user(user_id, prem_link)
+        short_link, wait_seconds, _slot_idx = await get_shortlink_for_user(user_id, prem_link)
 
         # ── All shorteners exhausted for today ───────────────────────────────
         if short_link is None:
@@ -151,6 +151,29 @@ async def start_command(client: Client, message: Message):
             if not is_premium and user_id != OWNER_ID and not basic.startswith("yu3elk"):
                 await short_url(client, message, base64_string)
                 return
+
+            # === SUCCESS / ACCESS TRACKING ============================
+            # We only reach this block when the user is actually being
+            # granted file access:
+            #   * Premium users / OWNER  → record a premium access
+            #   * Regular users coming back via the yu3elk callback
+            #     → that means they just completed a shortener; advance
+            #       their sequential progress and bump the daily counters.
+            try:
+                if is_premium or user_id == OWNER_ID:
+                    await db.record_premium_access(user_id, base64_string)
+                elif basic.startswith("yu3elk"):
+                    completed_idx = await db.consume_shortener_success(user_id)
+                    if completed_idx >= 0:
+                        await db.increment_shortener_success(completed_idx)
+                        try:
+                            cur = await db.get_verify_count(user_id)
+                            await db.set_verify_count(user_id, cur + 1)
+                        except Exception:
+                            pass
+            except Exception as track_err:
+                print(f"Tracking error (non-fatal): {track_err}")
+            # ==========================================================
 
         except Exception as e:
             print(f"Error processing start payload: {e}")
