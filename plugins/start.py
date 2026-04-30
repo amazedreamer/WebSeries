@@ -388,6 +388,12 @@ async def start_command(client: Client, message: Message):
                     completed_idx = await db.consume_shortener_success(user_id)
                     if completed_idx >= 0:
                         await db.increment_shortener_success(completed_idx)
+                        # Lock this exact shortener slot for this user
+                        # for the next 24 hours (per-user, per-slot).
+                        try:
+                            await db.mark_shortener_used(user_id, completed_idx, hours=24)
+                        except Exception as cd_err:
+                            print(f"[cooldown] mark_shortener_used failed: {cd_err}")
                         try:
                             cur = await db.get_verify_count(user_id)
                             await db.set_verify_count(user_id, cur + 1)
