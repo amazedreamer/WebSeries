@@ -123,3 +123,60 @@ async def get_admins(client: Client, message: Message):
 
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close")]])
     await pro.edit(f"<b>⚡ Current Admin List:</b>\n\n{admin_list}", reply_markup=reply_markup)
+
+
+# ============================================================================
+# /count — admin daily statistics dashboard
+# ----------------------------------------------------------------------------
+# All counts auto-reset every day at 00:00 IST via the scheduler in bot.py.
+# Shows:
+#   • Total successful shortener completions today
+#   • Per-shortener breakdown (domain + success count)
+#   • Premium users who visited today (unique count)
+#   • Unique link accesses by premium users (no duplicates)
+# ============================================================================
+@Bot.on_message(filters.command('count') & filters.private & admin)
+async def daily_count_dashboard(client: Client, message: Message):
+    pro = await message.reply("<b><i>ꜰᴇᴛᴄʜɪɴɢ ᴅᴀɪʟʏ ꜱᴛᴀᴛꜱ...</i></b>", quote=True)
+
+    try:
+        stats = await db.get_today_stats()
+    except Exception as e:
+        return await pro.edit(f"<b>❌ ꜰᴀɪʟᴇᴅ ᴛᴏ ʟᴏᴀᴅ ꜱᴛᴀᴛꜱ:</b>\n<code>{e}</code>")
+
+    today = stats.get('_id', '')
+    total_success = int(stats.get('total_success', 0) or 0)
+    per_slot = stats.get('shortener_success', {}) or {}
+    premium_users = stats.get('premium_users', []) or []
+    premium_unique_links = int(stats.get('premium_unique_link_count', 0) or 0)
+
+    # Build per-shortener breakdown using the live config
+    providers = SHORTLINK_PROVIDERS
+    if not providers:
+        per_slot_block = "<blockquote>» ɴᴏ ꜱʜᴏʀᴛᴇɴᴇʀꜱ ᴄᴏɴꜰɪɢᴜʀᴇᴅ.</blockquote>"
+    else:
+        lines = []
+        for i, p in enumerate(providers):
+            domain = p.get('url', '—')
+            count = int(per_slot.get(str(i), 0) or 0)
+            lines.append(
+                f"<blockquote>» <b>#{i+1}</b> <code>{domain}</code> "
+                f"→ <b>{count}</b> ꜱᴜᴄᴄᴇꜱꜱ</blockquote>"
+            )
+        per_slot_block = "\n".join(lines)
+
+    text = (
+        f"<b>📊 ᴅᴀɪʟʏ ᴄᴏᴜɴᴛ ᴅᴀꜱʜʙᴏᴀʀᴅ</b>\n"
+        f"<blockquote>» ᴅᴀᴛᴇ (ɪꜱᴛ): <b>{today}</b></blockquote>\n"
+        f"<blockquote>» ʀᴇꜱᴇᴛꜱ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴀᴛ <b>00:00 ɪꜱᴛ</b></blockquote>\n\n"
+        f"<b>✅ ᴛᴏᴛᴀʟ ꜱʜᴏʀᴛᴇɴᴇʀ ᴄᴏᴍᴘʟᴇᴛɪᴏɴꜱ</b>\n"
+        f"<blockquote>» <b>{total_success}</b> ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴꜱ ᴛᴏᴅᴀʏ</blockquote>\n\n"
+        f"<b>🔗 ᴘᴇʀ-ꜱʜᴏʀᴛᴇɴᴇʀ ʙʀᴇᴀᴋᴅᴏᴡɴ</b>\n"
+        f"{per_slot_block}\n\n"
+        f"<b>💎 ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴛɪᴠɪᴛʏ</b>\n"
+        f"<blockquote>» ᴜɴɪQᴜᴇ ᴘʀᴇᴍɪᴜᴍ ᴜꜱᴇʀꜱ ᴠɪꜱɪᴛᴇᴅ: <b>{len(premium_users)}</b></blockquote>\n"
+        f"<blockquote>» ᴜɴɪQᴜᴇ ʟɪɴᴋꜱ ᴀᴄᴄᴇꜱꜱᴇᴅ ʙʏ ᴘʀᴇᴍɪᴜᴍ: <b>{premium_unique_links}</b></blockquote>"
+    )
+
+    reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close")]])
+    await pro.edit(text, reply_markup=reply_markup)
