@@ -215,9 +215,8 @@ async def _handle_bypass_attempt(client: Client, message: Message,
     # Compose the warning / ban message — themed to match the rest of the bot.
     common_header = (
         f"<blockquote>⚠️ <b>ʙʏᴘᴀss ᴀᴛᴛᴇᴍᴘᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ</b></blockquote>\n"
-        f"<blockquote>» ʏᴏᴜ ʀᴇᴛᴜʀɴᴇᴅ ɪɴ ʟᴇss ᴛʜᴀɴ "
-        f"<b>{BYPASS_PROTECTION_SECONDS}s</b> — ᴛʜᴀᴛ ɪs ɴᴏᴛ ᴀʟʟᴏᴡᴇᴅ.</blockquote>\n"
-        f"<blockquote>» sᴛʀɪᴋᴇ <b>#{strikes}</b> ᴏɴ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ.</blockquote>\n"
+        f"ᴀᴄᴄᴇꜱꜱ — ɴᴏᴛ ᴀʟʟᴏᴡᴇᴅ.</blockquote>\n\n"
+        f"<blockquote>» <b>sᴛʀɪᴋᴇ #{strikes}</b> ᴏɴ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ.</blockquote>\n"
     )
 
     if action == 'warn':
