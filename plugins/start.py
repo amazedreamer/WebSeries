@@ -49,18 +49,85 @@ def _format_wait_time(seconds: int) -> str:
     return " ".join(parts)
 
 
+async def _delete_message_safely(client: Client, chat_id: int, message_id: int):
+    try:
+        await client.delete_messages(chat_id, message_id)
+    except Exception:
+        pass
+
+
+async def _cleanup_prior_pending_for_user(client: Client, user_id: int):
+    """
+    Delete any active short-link messages this user still has open and
+    invalidate their pending records. Called whenever the user requests a
+    new file or a new short link — implements "delete the previous one
+    and generate a new one" behaviour.
+    """
+    try:
+        prior = await db.find_active_pendings_for_user(user_id)
+    except Exception as e:
+        print(f"[bypass] cleanup lookup failed: {e}")
+        return
+    for p in prior:
+        await _delete_message_safely(client, p.get('chat_id'), p.get('message_id'))
+        try:
+            await db.expire_pending(p['user_id'], p['base64'])
+        except Exception:
+            pass
+
+
+async def _auto_expire_short_msg(client: Client, user_id: int, base64_string: str,
+                                 chat_id: int, message_id: int, delay: int):
+    """
+    Background task: after `delay` seconds, delete the short-link message
+    UNLESS it has already been completed (record was deleted on success).
+    If the user successfully verified, the pending doc is gone and we
+    leave the message alone.
+    """
+    try:
+        await asyncio.sleep(max(1, int(delay)))
+        pending = await db.get_pending_shortener(user_id, base64_string)
+        if pending is None:
+            return  # user already redeemed it — leave the message be
+        # Still pending (or marked expired) → delete the unused message.
+        await _delete_message_safely(client, chat_id, message_id)
+        # Also expire the record so a future click shows "link expired".
+        try:
+            await db.expire_pending(user_id, base64_string)
+        except Exception:
+            pass
+    except Exception as e:
+        print(f"[bypass] auto-expire task failed: {e}")
+
+
+async def _auto_delete_message(client: Client, chat_id: int, message_id: int, delay: int):
+    """Plain-and-simple delete-after-delay used for the buy-premium QR message."""
+    try:
+        await asyncio.sleep(max(1, int(delay)))
+        await _delete_message_safely(client, chat_id, message_id)
+    except Exception as e:
+        print(f"[autodelete] failed: {e}")
+
+
 async def short_url(client: Client, message: Message, base64_string):
     """
     Send the verification/shortener link message for a non-premium user.
 
-    Two possible outcomes:
-    1. A shortener slot is available → show the shortened link as normal.
-       The user will keep seeing the SAME shortener until they complete it.
-    2. The user has cleared every shortener for today → show a
+    Behaviour:
+    1. Cleans up any previously open short-link messages for this user
+       (so they only ever have ONE active short link at a time).
+    2. If a shortener slot is available, sends the new link, records a
+       pending short-link doc with the timestamp (used by bypass detection),
+       and schedules a 20-min auto-delete if the link goes unused.
+    3. If the user has cleared every shortener for today, shows a
        "come back tomorrow / buy premium" message instead.
     """
     try:
         user_id = message.from_user.id
+
+        # ── Cleanup: kill any prior short-link msg the user still has open
+        await _cleanup_prior_pending_for_user(client, user_id)
+
         prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
 
         short_link, wait_seconds, _slot_idx = await get_shortlink_for_user(user_id, prem_link)
@@ -95,14 +162,101 @@ async def short_url(client: Client, message: Message, base64_string):
             [InlineKeyboardButton("• ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ •", callback_data="premium")]
         ]
 
-        await message.reply_photo(
+        sent = await message.reply_photo(
             photo=SHORTENER_PIC,
             caption=SHORT_MSG.format(),
             reply_markup=InlineKeyboardMarkup(buttons),
         )
 
+        # Record pending shortener (this both starts the bypass timer and
+        # tells the auto-expire task that the message is still "in use").
+        try:
+            await db.create_pending_shortener(
+                user_id=user_id,
+                base64=base64_string,
+                chat_id=sent.chat.id,
+                message_id=sent.id,
+            )
+        except Exception as e:
+            print(f"[bypass] failed to create pending record: {e}")
+
+        # Schedule the 20-min unused-link auto-delete in the background.
+        asyncio.create_task(_auto_expire_short_msg(
+            client, user_id, base64_string,
+            sent.chat.id, sent.id, SHORT_MSG_AUTO_DELETE_SECONDS,
+        ))
+
     except IndexError:
         pass
+
+
+async def _handle_bypass_attempt(client: Client, message: Message,
+                                 user_id: int, base64_string: str):
+    """
+    Apply the next escalation step for a bypass attempt and send the user
+    the appropriate notice. Always finishes by issuing a fresh short link
+    (when the user isn't permanently/temporarily banned out of access).
+    """
+    try:
+        result = await db.register_bypass_attempt(user_id)
+    except Exception as e:
+        print(f"[bypass] register_bypass_attempt failed: {e}")
+        return
+
+    action = result['action']
+    strikes = result['strikes']
+
+    # Mark the abused link as expired so re-clicking it won't work.
+    try:
+        await db.expire_pending(user_id, base64_string)
+    except Exception:
+        pass
+
+    # Compose the warning / ban message — themed to match the rest of the bot.
+    common_header = (
+        f"<blockquote>⚠️ <b>ʙʏᴘᴀss ᴀᴛᴛᴇᴍᴘᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ</b></blockquote>\n"
+        f"<blockquote>» ʏᴏᴜ ʀᴇᴛᴜʀɴᴇᴅ ɪɴ ʟᴇss ᴛʜᴀɴ "
+        f"<b>{BYPASS_PROTECTION_SECONDS}s</b> — ᴛʜᴀᴛ ɪs ɴᴏᴛ ᴀʟʟᴏᴡᴇᴅ.</blockquote>\n"
+        f"<blockquote>» sᴛʀɪᴋᴇ <b>#{strikes}</b> ᴏɴ ʏᴏᴜʀ ᴀᴄᴄᴏᴜɴᴛ.</blockquote>\n"
+    )
+
+    if action == 'warn':
+        text = (
+            common_header +
+            f"<blockquote>👉 ᴛʜɪs ɪs ʏᴏᴜʀ <b>ғɪʀsᴛ ᴀɴᴅ ᴏɴʟʏ ᴡᴀʀɴɪɴɢ</b>.</blockquote>\n"
+            f"<blockquote>👉 ᴄᴏᴍᴘʟᴇᴛᴇ ᴀʟʟ sᴛᴇᴘs ᴘʀᴏᴘᴇʀʟʏ — ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ.</blockquote>\n"
+            f"<blockquote>⚠️ ɴᴇxᴛ ᴀᴛᴛᴇᴍᴘᴛ → <b>12-ʜᴏᴜʀ ʙᴀɴ</b>.</blockquote>"
+        )
+        await message.reply_text(text, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
+        ]))
+        # Re-issue a fresh short link so the user can try again the right way.
+        await short_url(client, message, base64_string)
+        return
+
+    if action in ('ban_12h', 'ban_24h'):
+        hours = 12 if action == 'ban_12h' else 24
+        text = (
+            common_header +
+            f"<blockquote>⛔ ʏᴏᴜ ᴀʀᴇ ɴᴏᴡ <b>ʙᴀɴɴᴇᴅ ғᴏʀ {hours} ʜᴏᴜʀs</b>.</blockquote>\n"
+            f"<blockquote>» ɴᴇxᴛ ʙʏᴘᴀss → "
+            f"<b>{'24-ʜᴏᴜʀ' if hours == 12 else 'ᴘᴇʀᴍᴀɴᴇɴᴛ'} ʙᴀɴ</b>.</blockquote>\n"
+            f"<blockquote>👉 ᴄᴏᴍᴘʟᴇᴛᴇ ᴀʟʟ sᴛᴇᴘs ᴘʀᴏᴘᴇʀʟʏ ɴᴇxᴛ ᴛɪᴍᴇ.</blockquote>"
+        )
+        await message.reply_text(text, reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Contact Support", url=BAN_SUPPORT)],
+        ]))
+        return
+
+    # Permanent
+    text = (
+        common_header +
+        f"<blockquote>⛔ ʏᴏᴜ ᴀʀᴇ ɴᴏᴡ <b>ᴘᴇʀᴍᴀɴᴇɴᴛʟʏ ʙᴀɴɴᴇᴅ</b> ғʀᴏᴍ ᴜsɪɴɢ ᴛʜɪs ʙᴏᴛ.</blockquote>\n"
+        f"<blockquote>» ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ ɪғ ʏᴏᴜ ʙᴇʟɪᴇᴠᴇ ᴛʜɪs ɪs ᴀ ᴍɪsᴛᴀᴋᴇ.</blockquote>"
+    )
+    await message.reply_text(text, reply_markup=InlineKeyboardMarkup([
+        [InlineKeyboardButton("Contact Support", url=BAN_SUPPORT)],
+    ]))
 
 
 @Bot.on_message(filters.command('start') & filters.private)
@@ -122,13 +276,37 @@ async def start_command(client: Client, message: Message):
     if not await is_subscribed(client, user_id):
         return await not_joined(client, message)
 
-    # Check if user is banned
+    # Check if user is banned (admin permanent ban list)
     banned_users = await db.get_ban_users()
     if user_id in banned_users:
         return await message.reply_text(
             f"<blockquote>⛔️ <b>ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ</b></blockquote>\n\n"
                             f"<blockquote>ʏᴏᴜ ʜᴀᴠᴇ ʙᴇᴇɴ <b>ʙᴀɴɴᴇᴅ </b> ғᴏʀ ʙʏᴘᴀss ᴀᴛᴛᴇᴍᴘᴛs.</blockquote>\n"
                             f"<blockquote>ᴡᴇ ᴅᴏ ɴᴏᴛ ᴛᴏʟᴇʀᴀᴛᴇ ᴄʜᴇᴀᴛɪɴɢ. ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ ᴛᴏ ᴀᴘᴘᴇᴀʟ.</blockquote>",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("Contact Support", url=BAN_SUPPORT)]]
+            )
+        )
+
+    # Check timed/permanent bypass-protection ban
+    bypass_ban = await db.get_bypass_ban(user_id)
+    if bypass_ban:
+        if bypass_ban.get('permanent'):
+            ban_text = (
+                f"<blockquote>⛔️ <b>ᴀᴄᴄᴇss ᴘᴇʀᴍᴀɴᴇɴᴛʟʏ ʙʟᴏᴄᴋᴇᴅ</b></blockquote>\n"
+                f"<blockquote>» ʀᴇᴀsᴏɴ: ʀᴇᴘᴇᴀᴛᴇᴅ ʙʏᴘᴀss ᴀᴛᴛᴇᴍᴘᴛs.</blockquote>\n"
+                f"<blockquote>» ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ ᴛᴏ ᴀᴘᴘᴇᴀʟ.</blockquote>"
+            )
+        else:
+            remaining = max(0, int(float(bypass_ban.get('banned_until', 0)) - time.time()))
+            ban_text = (
+                f"<blockquote>⛔️ <b>ᴛᴇᴍᴘᴏʀᴀʀʏ ʙᴀɴ</b></blockquote>\n"
+                f"<blockquote>» ʀᴇᴀsᴏɴ: ʙʏᴘᴀss ᴀᴛᴛᴇᴍᴘᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ.</blockquote>\n"
+                f"<blockquote>» ᴜɴʙᴀɴ ɪɴ: <b>{_format_wait_time(remaining)}</b></blockquote>\n"
+                f"<blockquote>» ɴᴇxᴛ ᴠɪᴏʟᴀᴛɪᴏɴ ᴡɪʟʟ ɪɴᴄʀᴇᴀsᴇ ᴛʜᴇ ᴘᴇɴᴀʟᴛʏ.</blockquote>"
+            )
+        return await message.reply_text(
+            ban_text,
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("Contact Support", url=BAN_SUPPORT)]]
             )
@@ -149,8 +327,52 @@ async def start_command(client: Client, message: Message):
                 base64_string = basic
 
             if not is_premium and user_id != OWNER_ID and not basic.startswith("yu3elk"):
+                # Brand-new file request from a non-premium user → fresh short link.
                 await short_url(client, message, base64_string)
                 return
+
+            # === BYPASS PROTECTION (yu3elk callbacks only) ===================
+            # When a non-premium user returns via the yu3elk verification link
+            # we check how long it's been since the short link was sent. If
+            # they're back too fast it's a bypass attempt → escalate.
+            if basic.startswith("yu3elk") and not is_premium and user_id != OWNER_ID:
+                try:
+                    pending = await db.get_pending_shortener(user_id, base64_string)
+                except Exception as e:
+                    pending = None
+                    print(f"[bypass] lookup failed: {e}")
+
+                if pending is None:
+                    # No pending record. Either the user already redeemed this
+                    # link (legit "Get File Again" reload) or it was wiped by
+                    # the daily reset. Allow the file but don't double-count.
+                    pass
+                elif pending.get('expired'):
+                    # Link was invalidated (previous bypass / auto-expire / new
+                    # short link issued). Refuse and re-issue.
+                    await message.reply_text(
+                        "<blockquote>⏳ <b>ᴛʜɪs ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ʜᴀs ᴇxᴘɪʀᴇᴅ</b></blockquote>\n"
+                        "<blockquote>» ᴀ ɴᴇᴡ sʜᴏʀᴛ ʟɪɴᴋ ʜᴀs ʙᴇᴇɴ ɢᴇɴᴇʀᴀᴛᴇᴅ ʙᴇʟᴏᴡ.</blockquote>\n"
+                        "<blockquote>» ᴘʟᴇᴀsᴇ ᴄᴏᴍᴘʟᴇᴛᴇ ᴀʟʟ sᴛᴇᴘs ᴘʀᴏᴘᴇʀʟʏ ᴀɴᴅ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ.</blockquote>",
+                        reply_markup=InlineKeyboardMarkup([
+                            [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
+                        ])
+                    )
+                    await short_url(client, message, base64_string)
+                    return
+                else:
+                    elapsed = time.time() - float(pending.get('sent_at', 0))
+                    if elapsed < BYPASS_PROTECTION_SECONDS:
+                        await _handle_bypass_attempt(
+                            client, message, user_id, base64_string
+                        )
+                        return
+                    # Legit: clear pending so the message can stay (no auto-delete)
+                    try:
+                        await db.delete_pending(user_id, base64_string)
+                    except Exception:
+                        pass
+            # =================================================================
 
             # === SUCCESS / ACCESS TRACKING ============================
             # We only reach this block when the user is actually being
