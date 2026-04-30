@@ -7,11 +7,21 @@
 #
 # All rights reserved.
 
+import asyncio
 from pyrogram import Client, filters
 from bot import Bot
 from config import *
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from database.database import *
+
+
+async def _autodelete_after(client: Client, chat_id: int, message_id: int, delay: int):
+    """Schedule a single message deletion after `delay` seconds (best-effort)."""
+    try:
+        await asyncio.sleep(max(1, int(delay)))
+        await client.delete_messages(chat_id, message_id)
+    except Exception:
+        pass
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -106,7 +116,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
         except Exception as e:
             print(f"[cbb] premium: delete failed: {e}")
         try:
-            await client.send_photo(
+            premium_msg = await client.send_photo(
                 chat_id=query.message.chat.id,
                 photo=QR_PIC,
                 caption=(
@@ -133,6 +143,11 @@ async def cb_handler(client: Bot, query: CallbackQuery):
                     [InlineKeyboardButton("✖️ ᴄʟᴏsᴇ ᴍᴇɴᴜ", callback_data="close")],
                 ]),
             )
+            # Auto-delete the QR/payment message after PREMIUM_MSG_AUTO_DELETE_SECONDS.
+            asyncio.create_task(_autodelete_after(
+                client, premium_msg.chat.id, premium_msg.id,
+                PREMIUM_MSG_AUTO_DELETE_SECONDS,
+            ))
         except Exception as e:
             print(f"[cbb] premium: send_photo failed: {e}")
             await query.answer("Could not load premium info. Try again.", show_alert=True)
