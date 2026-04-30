@@ -8,6 +8,7 @@ import pymongo, os
 from config import DB_URI, DB_NAME
 import logging
 from datetime import datetime, timedelta
+from pytz import timezone as _tz
 
 dbclient = pymongo.MongoClient(DB_URI)
 database = dbclient[DB_NAME]
@@ -21,7 +22,10 @@ default_verify = {
     'link': ""
 }
 
-SHORTENER_COOLDOWN_SECONDS = 86400  # 24 hours
+
+def _today_ist() -> str:
+    """Return today's date string in IST (matches the bot's daily reset cron)."""
+    return datetime.now(_tz("Asia/Kolkata")).strftime("%Y-%m-%d")
 
 
 def new_user(id):
@@ -29,7 +33,7 @@ def new_user(id):
         '_id': id,
         'verify_status': {
             'is_verified': False,
-            'verified_time': "",
+            'verified_time': 0,
             'verify_token': "",
             'link': ""
         }
@@ -55,8 +59,12 @@ class Rohit:
         self.hash_settings = self.database['hash_settings']
         self.masked_links = self.database['masked_links']
         self.fingerprint_tokens = self.database['fingerprint_tokens']
-        # Per-user shortener usage tracker (time-based rotation)
-        self.shortener_tracker = self.database['shortener_tracker']
+        # Per-user sequential shortener progress (sticks to 1 slot until success).
+        self.shortener_progress = self.database['shortener_progress']
+        # Daily counters for /count (per-shortener success, premium accesses, etc.)
+        self.daily_stats = self.database['daily_stats']
+        # Per-premium-user unique link access record (one doc per user+link+date).
+        self.premium_access = self.database['premium_access']
 
     # USER DATA
     async def present_user(self, user_id: int):
@@ -293,77 +301,185 @@ class Rohit:
         return True
 
     # ================================================================
-    # PER-USER SHORTENER ROTATION — TIME-BASED (24-hour cooldown)
+    # PER-USER SEQUENTIAL SHORTENER PROGRESS
     #
-    # Each user gets a rotating slot through all active shorteners.
-    # Once a shortener is used for a user, it is locked for 24 hours
-    # for that specific user, so the shortener never gets repeated
-    # impressions from the same person within a single day.
+    # The bot serves one shortener at a time and STICKS to it until the
+    # user successfully completes it (returns via the yu3elk callback).
+    # Only then does it advance to the next slot, in strict order:
+    #     Shortener 1 → Shortener 2 → ... → Shortener N
+    # When all N are completed, the user is rate-limited until the
+    # daily reset (00:00 IST), at which point the progress wipes and
+    # they start over from Shortener 1.
     #
     # DB document shape (one per user):
     # {
     #   _id: user_id,
-    #   last_used_idx: 0,          # index that was last served
-    #   times: {
-    #     "0": 1700000000.0,        # unix timestamp of last use for slot 0
-    #     "1": 0.0,                 # 0 means never used
-    #     ...
-    #   }
+    #   current_idx: 0,          # next slot to serve (0..N)
+    #   pending_idx: -1,         # slot user is mid-completion on (-1 if none)
+    #   date: 'YYYY-MM-DD'       # IST date — auto-resets when this changes
     # }
     # ================================================================
 
-    async def _get_tracker_doc(self, user_id: int) -> dict:
-        doc = await self.shortener_tracker.find_one({'_id': user_id})
+    async def _get_progress_doc(self, user_id: int) -> dict:
+        doc = await self.shortener_progress.find_one({'_id': user_id})
         return doc or {}
 
-    async def pick_shortener_for_user(self, user_id: int, total_providers: int) -> tuple:
+    async def _ensure_today(self, user_id: int) -> dict:
+        """Return the user's progress doc, resetting it if the date rolled over."""
+        today = _today_ist()
+        doc = await self._get_progress_doc(user_id)
+        if not doc or doc.get('date') != today:
+            doc = {
+                '_id': user_id,
+                'current_idx': 0,
+                'pending_idx': -1,
+                'date': today,
+            }
+            await self.shortener_progress.update_one(
+                {'_id': user_id},
+                {'$set': {
+                    'current_idx': 0,
+                    'pending_idx': -1,
+                    'date': today,
+                }},
+                upsert=True
+            )
+        return doc
+
+    async def pick_sequential_shortener(self, user_id: int, total_providers: int) -> tuple:
         """
-        Return (idx, is_available, wait_seconds) for the best shortener to use.
+        Pick the shortener slot to serve next for this user.
 
-        is_available = True  → slot is ready; wait_seconds = 0.
-        is_available = False → ALL slots are within the 24-hour cooldown window.
-                               wait_seconds = seconds until the earliest slot opens.
+        Returns (idx, is_available):
+            (idx, True)  → serve providers[idx]; the user must complete it
+                            before being moved off this slot.
+            (-1, False)  → user has already cleared every slot for today;
+                            they must wait for the daily reset.
 
-        Selection order:
-        1. Start from the slot AFTER the one last served (round-robin).
-        2. Pick the FIRST slot that is either never used or 24h+ old.
-        3. If ALL are within 24h: return (oldest_slot, False, seconds_until_it_opens).
+        Stickiness rule:
+            If a `pending_idx` is already set (user was sent a link earlier
+            and hasn't completed it yet), the SAME slot is returned every
+            time so the user keeps seeing the same shortener until it works.
         """
-        now = time.time()
-        doc = await self._get_tracker_doc(user_id)
-        last_idx = doc.get('last_used_idx', -1)
-        times = doc.get('times', {})
+        doc = await self._ensure_today(user_id)
 
-        candidates = []
-        for offset in range(total_providers):
-            idx = (last_idx + 1 + offset) % total_providers
-            last_used = times.get(str(idx), 0.0)
-            candidates.append((idx, last_used))
+        # User is mid-flow on a slot — keep handing them the same one.
+        pending = doc.get('pending_idx', -1)
+        if pending is not None and pending >= 0 and pending < total_providers:
+            return (pending, True)
 
-        # First available slot (never used or cooldown expired)
-        for idx, last_used in candidates:
-            if last_used == 0.0 or (now - last_used) >= SHORTENER_COOLDOWN_SECONDS:
-                return (idx, True, 0)
+        current = doc.get('current_idx', 0)
+        if current >= total_providers:
+            # All shorteners cleared today — wait for daily reset.
+            return (-1, False)
 
-        # All slots exhausted — find which one frees up soonest
-        candidates.sort(key=lambda x: x[1])  # oldest first
-        oldest_idx, oldest_time = candidates[0]
-        wait_seconds = int(SHORTENER_COOLDOWN_SECONDS - (now - oldest_time)) + 1
-        return (oldest_idx, False, max(wait_seconds, 0))
-
-    async def mark_shortener_used(self, user_id: int, idx: int):
-        """Record that shortener `idx` was just served to `user_id`."""
-        now = time.time()
-        await self.shortener_tracker.update_one(
+        # Lock the user onto this slot until they complete it.
+        await self.shortener_progress.update_one(
             {'_id': user_id},
-            {
-                '$set': {
-                    'last_used_idx': idx,
-                    f'times.{idx}': now,
-                }
-            },
+            {'$set': {'pending_idx': current}},
             upsert=True
         )
+        return (current, True)
+
+    async def consume_shortener_success(self, user_id: int) -> int:
+        """
+        Mark the user's CURRENT pending shortener as completed and advance
+        them to the next one. Returns the slot index that was completed,
+        or -1 if there was nothing pending (e.g. repeat click on a link
+        the user has already redeemed today — must NOT be double-counted).
+        """
+        doc = await self._ensure_today(user_id)
+        pending = doc.get('pending_idx', -1)
+        if pending is None or pending < 0:
+            return -1
+
+        new_current = max(doc.get('current_idx', 0), pending + 1)
+        await self.shortener_progress.update_one(
+            {'_id': user_id},
+            {'$set': {
+                'current_idx': new_current,
+                'pending_idx': -1,
+            }},
+            upsert=True
+        )
+        return pending
+
+    async def seconds_until_daily_reset(self) -> int:
+        """Seconds remaining until the next 00:00 IST daily reset."""
+        now = datetime.now(_tz("Asia/Kolkata"))
+        tomorrow = (now + timedelta(days=1)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        return max(0, int((tomorrow - now).total_seconds()))
+
+    # ================================================================
+    # DAILY COUNTERS for /count  (auto-reset at 00:00 IST)
+    # ================================================================
+
+    async def _today_stats_doc(self):
+        today = _today_ist()
+        doc = await self.daily_stats.find_one({'_id': today})
+        return doc or {'_id': today}
+
+    async def increment_shortener_success(self, slot_idx: int):
+        """Increment the per-slot success counter for today."""
+        today = _today_ist()
+        await self.daily_stats.update_one(
+            {'_id': today},
+            {'$inc': {f'shortener_success.{slot_idx}': 1, 'total_success': 1}},
+            upsert=True
+        )
+
+    async def record_premium_access(self, user_id: int, link_payload: str) -> bool:
+        """
+        Record that a premium user accessed a link today.
+        Returns True if this is a NEW link for this user today (counted),
+        False if they've already accessed this exact link today (not counted).
+        """
+        today = _today_ist()
+        try:
+            await self.premium_access.insert_one({
+                'user_id': int(user_id),
+                'link': str(link_payload),
+                'date': today,
+                'ts': time.time(),
+            })
+            await self.daily_stats.update_one(
+                {'_id': today},
+                {
+                    '$addToSet': {'premium_users': int(user_id)},
+                    '$inc': {'premium_unique_link_count': 1},
+                },
+                upsert=True
+            )
+            return True
+        except Exception:
+            return False
+
+    async def get_today_stats(self) -> dict:
+        """Return the raw daily stats doc for today (zero-filled if missing)."""
+        today = _today_ist()
+        doc = await self.daily_stats.find_one({'_id': today})
+        if not doc:
+            return {
+                '_id': today,
+                'total_success': 0,
+                'shortener_success': {},
+                'premium_users': [],
+                'premium_unique_link_count': 0,
+            }
+        doc.setdefault('total_success', 0)
+        doc.setdefault('shortener_success', {})
+        doc.setdefault('premium_users', [])
+        doc.setdefault('premium_unique_link_count', 0)
+        return doc
+
+    async def reset_all_daily_stats(self):
+        """Wipe every daily counter and per-user progress so the day starts fresh."""
+        await self.sex_data.update_many({}, {'$set': {'verify_count': 0}})
+        await self.daily_stats.delete_many({})
+        await self.premium_access.delete_many({})
+        await self.shortener_progress.delete_many({})
 
 
 db = Rohit(DB_URI, DB_NAME)
