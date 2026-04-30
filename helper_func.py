@@ -203,25 +203,28 @@ async def get_shortlink(url, api, link):
 
 async def get_shortlink_for_user(user_id: int, long_url: str):
     """
-    Pick a shortener for this user using SEQUENTIAL, sticky rotation.
+    Pick a shortener for this user using SEQUENTIAL, sticky rotation
+    with a per-user, per-slot 24-hour cooldown.
 
     Behaviour:
-    - The bot serves shortener #1 and keeps serving it until the user
-      successfully completes it (returns to the bot via the yu3elk callback,
-      which calls db.consume_shortener_success).
-    - Only after a successful completion does the bot advance to #2, then
-      #3, ... up to the last configured slot.
-    - When the user has cleared every slot for the day they get a
-      "come back tomorrow / buy premium" message until the daily reset
-      at 00:00 IST, which wipes their progress and starts them again at #1.
+    - The bot serves the next available shortener slot (1 → 2 → ... → N),
+      sticking to it until the user successfully completes it (returns
+      via the yu3elk callback, which calls db.consume_shortener_success).
+    - On success, that EXACT slot is locked for THIS user for 24 hours.
+      Future requests skip cooldowned slots and serve the next one.
+    - The 24h cooldown does NOT reset at 00:00 IST — only the daily
+      counters in /count do. The picker also resets `current_idx` at
+      00:00 IST so the user starts walking the rotation from slot #1
+      again, automatically skipping any still-cooldowned slots.
+    - When EVERY rotatable slot is on cooldown, the user gets a
+      "wait / buy premium" message; wait_seconds is the time until
+      the earliest unlock (slot cooldown OR daily reset, whichever
+      truly unblocks them).
 
     Returns:
-        (short_url: str, 0, idx)           — a shortened URL is ready; idx is the
-                                              0-based slot number that was served.
-        (None, wait_seconds: int, -1)      — every shortener is cleared for today;
-                                              wait_seconds = time until 00:00 IST.
-
-    Single-provider setups always return slot 0 with no exhaustion logic.
+        (short_url: str, 0, idx)           — slot `idx` was served.
+        (None, wait_seconds: int, -1)      — all slots are on cooldown;
+                                              wait_seconds = earliest unblock.
     """
     providers = SHORTLINK_PROVIDERS
     total = len(providers)
@@ -229,21 +232,12 @@ async def get_shortlink_for_user(user_id: int, long_url: str):
     if total == 0:
         return (long_url, 0, -1)  # no shortener configured — return as-is
 
-    if total == 1:
-        # Single provider — sticky logic still applies via the progress doc
-        # so success counts can be recorded, but exhaustion is never signalled.
-        idx, is_available = await db.pick_sequential_shortener(user_id, total)
-        if not is_available:
-            wait_seconds = await db.seconds_until_daily_reset()
-            return (None, wait_seconds, -1)
-        provider = providers[idx]
-        short = await get_shortlink(provider["url"], provider["api"], long_url)
-        return (short, 0, idx)
-
     idx, is_available = await db.pick_sequential_shortener(user_id, total)
 
     if not is_available:
-        wait_seconds = await db.seconds_until_daily_reset()
+        # Compute the true earliest unblock moment: the later of the next
+        # slot-cooldown expiry and the daily IST midnight reset.
+        wait_seconds = await db.next_shortener_unlock_seconds(user_id, total)
         return (None, wait_seconds, -1)
 
     provider = providers[idx]
