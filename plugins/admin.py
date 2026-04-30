@@ -149,6 +149,12 @@ async def daily_count_dashboard(client: Client, message: Message):
     per_slot = stats.get('shortener_success', {}) or {}
     premium_users = stats.get('premium_users', []) or []
     premium_unique_links = int(stats.get('premium_unique_link_count', 0) or 0)
+    bypass_attempts = int(stats.get('bypass_attempts', 0) or 0)
+
+    try:
+        ban_counts = await db.count_active_bypass_bans()
+    except Exception:
+        ban_counts = {'timed': 0, 'permanent': 0, 'total': 0}
 
     # Build per-shortener breakdown using the live config
     providers = SHORTLINK_PROVIDERS
@@ -169,13 +175,17 @@ async def daily_count_dashboard(client: Client, message: Message):
         f"<b>📊 ᴅᴀɪʟʏ ᴄᴏᴜɴᴛ ᴅᴀꜱʜʙᴏᴀʀᴅ</b>\n"
         f"<blockquote>» ᴅᴀᴛᴇ (ɪꜱᴛ): <b>{today}</b></blockquote>\n"
         f"<blockquote>» ʀᴇꜱᴇᴛꜱ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴀᴛ <b>00:00 ɪꜱᴛ</b></blockquote>\n\n"
-        f"<b>✅ ᴛᴏᴛᴀʟ ꜱʜᴏʀᴛᴇɴᴇʀ ᴄᴏᴍᴘʟᴇᴛɪᴏɴꜱ</b>\n"
+        f"<b>✅ ᴛᴏᴛᴀʟ ᴄᴏᴍᴘʟᴇᴛɪᴏɴꜱ</b>\n"
         f"<blockquote>» <b>{total_success}</b> ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴꜱ ᴛᴏᴅᴀʏ</blockquote>\n\n"
         f"<b>🔗 ᴘᴇʀ-ꜱʜᴏʀᴛᴇɴᴇʀ ʙʀᴇᴀᴋᴅᴏᴡɴ</b>\n"
         f"{per_slot_block}\n\n"
         f"<b>💎 ᴘʀᴇᴍɪᴜᴍ ᴀᴄᴛɪᴠɪᴛʏ</b>\n"
-        f"<blockquote>» ᴜɴɪQᴜᴇ ᴘʀᴇᴍɪᴜᴍ ᴜꜱᴇʀꜱ ᴠɪꜱɪᴛᴇᴅ: <b>{len(premium_users)}</b></blockquote>\n"
-        f"<blockquote>» ᴜɴɪQᴜᴇ ʟɪɴᴋꜱ ᴀᴄᴄᴇꜱꜱᴇᴅ ʙʏ ᴘʀᴇᴍɪᴜᴍ: <b>{premium_unique_links}</b></blockquote>"
+        f"<blockquote>» ᴜɴɪQᴜᴇ ᴠɪꜱɪᴛᴇᴅ: <b>{len(premium_users)}</b></blockquote>\n"
+        f"<blockquote>» ᴜɴɪQᴜᴇ ʟɪɴᴋꜱ ᴀᴄᴄᴇꜱꜱ: <b>{premium_unique_links}</b></blockquote>\n\n"
+        f"<b>🛡️ ʙʏᴘᴀꜱꜱ ᴘʀᴏᴛᴇᴄᴛɪᴏɴ</b>\n"
+        f"<blockquote>» ᴀᴛᴛᴇᴍᴘᴛꜱ ᴛᴏᴅᴀʏ: <b>{bypass_attempts}</b></blockquote>\n"
+        f"<blockquote>» ᴄᴜʀʀᴇɴᴛʟʏ ʙᴀɴɴᴇᴅ: <b>{ban_counts['total']}</b> "
+        f"(ᴛɪᴍᴇᴅ <b>{ban_counts['timed']}</b> + ᴘᴇʀᴍᴀ <b>{ban_counts['permanent']}</b>)</blockquote>"
     )
 
     reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("ᴄʟᴏsᴇ", callback_data="close")]])
