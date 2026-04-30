@@ -65,6 +65,9 @@ class Rohit:
         self.daily_stats = self.database['daily_stats']
         # Per-premium-user unique link access record (one doc per user+link+date).
         self.premium_access = self.database['premium_access']
+        # Bypass protection: pending short-link records + escalating ban store.
+        self.pending_shortener = self.database['pending_shortener']
+        self.bypass_bans = self.database['bypass_bans']
 
     # USER DATA
     async def present_user(self, user_id: int):
@@ -480,6 +483,160 @@ class Rohit:
         await self.daily_stats.delete_many({})
         await self.premium_access.delete_many({})
         await self.shortener_progress.delete_many({})
+        # Pending short-link records also reset — yesterday's unfinished links
+        # don't carry over since the user starts at slot #1 again today.
+        # Bypass bans are NOT wiped: they must persist across the daily reset.
+        await self.pending_shortener.delete_many({})
+
+    # ================================================================
+    # BYPASS PROTECTION
+    #
+    # When a short link is sent we record:
+    #   {_id: "{user_id}:{base64}",
+    #    user_id, base64, chat_id, message_id,
+    #    sent_at: unix_ts,           # when the link was sent
+    #    expired: bool,              # true after a bypass detection
+    #   }
+    # The yu3elk callback then either:
+    #   - completes legitimately (delta >= BYPASS_PROTECTION_SECONDS) → delete
+    #   - is too fast → mark expired, register a strike, escalate the ban
+    #
+    # Escalation table (per user, cumulative across days):
+    #   strike 1 → warn only
+    #   strike 2 → ban 12 hours
+    #   strike 3 → ban 24 hours
+    #   strike 4 → permanent ban
+    # ================================================================
+
+    @staticmethod
+    def _pending_id(user_id: int, base64: str) -> str:
+        return f"{int(user_id)}:{str(base64)}"
+
+    async def create_pending_shortener(self, user_id: int, base64: str,
+                                       chat_id: int, message_id: int) -> float:
+        """Record that a short link was just served. Returns the sent_at ts."""
+        sent_at = time.time()
+        await self.pending_shortener.update_one(
+            {'_id': self._pending_id(user_id, base64)},
+            {'$set': {
+                'user_id': int(user_id),
+                'base64': str(base64),
+                'chat_id': int(chat_id),
+                'message_id': int(message_id),
+                'sent_at': sent_at,
+                'expired': False,
+            }},
+            upsert=True
+        )
+        return sent_at
+
+    async def get_pending_shortener(self, user_id: int, base64: str):
+        return await self.pending_shortener.find_one(
+            {'_id': self._pending_id(user_id, base64)}
+        )
+
+    async def find_active_pendings_for_user(self, user_id: int) -> list:
+        """All non-expired pending short-link records for a user (for cleanup)."""
+        cursor = self.pending_shortener.find(
+            {'user_id': int(user_id), 'expired': {'$ne': True}}
+        )
+        return [d async for d in cursor]
+
+    async def expire_pending(self, user_id: int, base64: str):
+        await self.pending_shortener.update_one(
+            {'_id': self._pending_id(user_id, base64)},
+            {'$set': {'expired': True}}
+        )
+
+    async def delete_pending(self, user_id: int, base64: str):
+        await self.pending_shortener.delete_one(
+            {'_id': self._pending_id(user_id, base64)}
+        )
+
+    async def register_bypass_attempt(self, user_id: int) -> dict:
+        """
+        Record a bypass attempt and apply the next escalation step.
+        Returns a dict:
+            {
+              'strikes': int,
+              'action': 'warn'|'ban_12h'|'ban_24h'|'permanent',
+              'banned_until': float|None,
+              'permanent': bool,
+            }
+        """
+        now = time.time()
+        existing = await self.bypass_bans.find_one({'_id': int(user_id)}) or {}
+        new_strikes = int(existing.get('strikes', 0)) + 1
+
+        if new_strikes <= 1:
+            action = 'warn'
+            banned_until = None
+            permanent = False
+        elif new_strikes == 2:
+            action = 'ban_12h'
+            banned_until = now + (12 * 3600)
+            permanent = False
+        elif new_strikes == 3:
+            action = 'ban_24h'
+            banned_until = now + (24 * 3600)
+            permanent = False
+        else:
+            action = 'permanent'
+            banned_until = None
+            permanent = True
+
+        # Track today's bypass-attempt counter for /count
+        today = _today_ist()
+        await self.daily_stats.update_one(
+            {'_id': today},
+            {'$inc': {'bypass_attempts': 1}},
+            upsert=True
+        )
+
+        await self.bypass_bans.update_one(
+            {'_id': int(user_id)},
+            {'$set': {
+                'strikes': new_strikes,
+                'banned_until': banned_until,
+                'permanent': permanent,
+                'last_bypass_at': now,
+                'last_action': action,
+            }},
+            upsert=True
+        )
+
+        return {
+            'strikes': new_strikes,
+            'action': action,
+            'banned_until': banned_until,
+            'permanent': permanent,
+        }
+
+    async def get_bypass_ban(self, user_id: int):
+        """
+        Return ban info dict if the user is currently banned via bypass
+        protection (timed or permanent), else None.
+        """
+        doc = await self.bypass_bans.find_one({'_id': int(user_id)})
+        if not doc:
+            return None
+        if doc.get('permanent'):
+            return doc
+        until = doc.get('banned_until')
+        if until and time.time() < float(until):
+            return doc
+        return None
+
+    async def count_active_bypass_bans(self) -> dict:
+        """Counts of currently-active bypass bans (timed + permanent)."""
+        now = time.time()
+        timed = await self.bypass_bans.count_documents({
+            'permanent': {'$ne': True},
+            'banned_until': {'$gt': now},
+        })
+        permanent = await self.bypass_bans.count_documents({'permanent': True})
+        return {'timed': int(timed), 'permanent': int(permanent),
+                'total': int(timed) + int(permanent)}
 
 
 db = Rohit(DB_URI, DB_NAME)
