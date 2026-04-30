@@ -67,6 +67,12 @@ class Rohit:
         self.premium_access = self.database['premium_access']
         # Bypass protection: pending short-link records + escalating ban store.
         self.pending_shortener = self.database['pending_shortener']
+        # Per-user, per-shortener 24h usage cooldowns. Persists across the
+        # daily 00:00 IST reset (only the daily counters reset, NOT cooldowns).
+        # Doc shape:
+        #   { _id: user_id,
+        #     cooldowns: { "<slot_idx>": unix_ts_until, ... } }
+        self.shortener_cooldowns = self.database['shortener_cooldowns']
         self.bypass_bans = self.database['bypass_bans']
 
     # USER DATA
@@ -353,36 +359,58 @@ class Rohit:
         """
         Pick the shortener slot to serve next for this user.
 
+        Sequential rotation (Shortener 1 → 2 → ... → N) is preserved, but
+        any slot the user has used in the last 24 hours is SKIPPED — even
+        across the daily reset. The 24h per-slot cooldown is applied at the
+        moment of a successful completion (see `mark_shortener_used`).
+
         Returns (idx, is_available):
             (idx, True)  → serve providers[idx]; the user must complete it
                             before being moved off this slot.
-            (-1, False)  → user has already cleared every slot for today;
-                            they must wait for the daily reset.
+            (-1, False)  → every still-rotatable slot is on cooldown for
+                            this user; caller should look up the wait time
+                            via `next_shortener_unlock_seconds`.
 
         Stickiness rule:
             If a `pending_idx` is already set (user was sent a link earlier
             and hasn't completed it yet), the SAME slot is returned every
-            time so the user keeps seeing the same shortener until it works.
+            time so the user keeps seeing the same shortener until it
+            works — unless that slot has somehow entered cooldown (defensive
+            edge case), in which case the sticky lock is cleared.
         """
         doc = await self._ensure_today(user_id)
+        cooldowns = await self.get_shortener_cooldowns(user_id)  # {int: until_ts}
 
-        # User is mid-flow on a slot — keep handing them the same one.
+        # Sticky: user is mid-flow on a slot — keep handing them the same one.
         pending = doc.get('pending_idx', -1)
         if pending is not None and pending >= 0 and pending < total_providers:
-            return (pending, True)
+            if pending not in cooldowns:
+                return (pending, True)
+            # Defensive: pending slot is now on cooldown — clear and re-pick.
+            await self.shortener_progress.update_one(
+                {'_id': user_id},
+                {'$set': {'pending_idx': -1}},
+                upsert=True
+            )
 
+        # Walk forward from current_idx, skipping any slot still on cooldown.
         current = doc.get('current_idx', 0)
-        if current >= total_providers:
-            # All shorteners cleared today — wait for daily reset.
+        i = current
+        while i < total_providers and i in cooldowns:
+            i += 1
+
+        if i >= total_providers:
+            # No rotatable slot available right now — caller will show the
+            # cooldown / "buy premium" message with a wait time.
             return (-1, False)
 
-        # Lock the user onto this slot until they complete it.
+        # Persist the advanced pointer + lock the user onto this slot.
         await self.shortener_progress.update_one(
             {'_id': user_id},
-            {'$set': {'pending_idx': current}},
+            {'$set': {'current_idx': i, 'pending_idx': i}},
             upsert=True
         )
-        return (current, True)
+        return (i, True)
 
     async def consume_shortener_success(self, user_id: int) -> int:
         """
@@ -414,6 +442,96 @@ class Rohit:
             hour=0, minute=0, second=0, microsecond=0
         )
         return max(0, int((tomorrow - now).total_seconds()))
+
+    # ================================================================
+    # PER-USER 24-HOUR PER-SHORTENER COOLDOWN
+    #
+    # When a user successfully completes shortener slot `i`, that slot
+    # becomes locked for that user for the next 24 hours. The lock is
+    # NOT cleared by the daily 00:00 IST reset — only the daily counters
+    # reset. The picker (`pick_sequential_shortener`) skips any slot
+    # whose cooldown has not yet expired.
+    # ================================================================
+
+    async def mark_shortener_used(self, user_id: int, slot_idx: int,
+                                  hours: int = 24):
+        """Lock `slot_idx` for `user_id` for the next `hours` hours."""
+        if slot_idx is None or slot_idx < 0:
+            return
+        until = time.time() + (int(hours) * 3600)
+        await self.shortener_cooldowns.update_one(
+            {'_id': int(user_id)},
+            {'$set': {f'cooldowns.{int(slot_idx)}': float(until)}},
+            upsert=True
+        )
+
+    async def get_shortener_cooldowns(self, user_id: int) -> dict:
+        """
+        Return {slot_idx_int: until_ts} for slots whose cooldown is still
+        in the future. Expired entries are filtered out (and lazily
+        cleaned up so the doc doesn't grow forever).
+        """
+        doc = await self.shortener_cooldowns.find_one({'_id': int(user_id)})
+        if not doc:
+            return {}
+        raw = doc.get('cooldowns', {}) or {}
+        now = time.time()
+        active: dict = {}
+        expired_keys = []
+        for k, v in raw.items():
+            try:
+                until = float(v)
+            except (TypeError, ValueError):
+                expired_keys.append(k)
+                continue
+            if until > now:
+                try:
+                    active[int(k)] = until
+                except (TypeError, ValueError):
+                    pass
+            else:
+                expired_keys.append(k)
+        if expired_keys:
+            unset = {f'cooldowns.{k}': "" for k in expired_keys}
+            try:
+                await self.shortener_cooldowns.update_one(
+                    {'_id': int(user_id)},
+                    {'$unset': unset}
+                )
+            except Exception:
+                pass
+        return active
+
+    async def next_shortener_unlock_seconds(self, user_id: int,
+                                            total_providers: int) -> int:
+        """
+        Compute how many seconds until this user's next shortener slot
+        becomes usable. Considers BOTH per-slot 24h cooldowns AND the
+        00:00 IST daily reset (which wipes `current_idx`, allowing slots
+        that are no longer on cooldown to be served again).
+
+        Always returns at least 1.
+        """
+        cooldowns = await self.get_shortener_cooldowns(user_id)
+        if total_providers <= 0:
+            return await self.seconds_until_daily_reset() or 1
+
+        now = time.time()
+        # Earliest moment some slot in 0..N-1 leaves cooldown.
+        slot_unlocks = [
+            cooldowns[i] for i in range(total_providers) if i in cooldowns
+        ]
+        if not slot_unlocks:
+            # No active cooldowns at all — exhaustion must be due to
+            # current_idx already past N. Daily reset is what unblocks.
+            return max(1, await self.seconds_until_daily_reset())
+
+        earliest_slot_unlock = min(slot_unlocks) - now
+        # The user also needs `current_idx` reset (which only happens at
+        # the daily IST midnight) before a freshly-uncooled slot can be
+        # served, so the true wait is the LATER of the two.
+        daily_reset = await self.seconds_until_daily_reset()
+        return max(1, int(max(earliest_slot_unlock, daily_reset)))
 
     # ================================================================
     # DAILY COUNTERS for /count  (auto-reset at 00:00 IST)
@@ -485,7 +603,10 @@ class Rohit:
         await self.shortener_progress.delete_many({})
         # Pending short-link records also reset — yesterday's unfinished links
         # don't carry over since the user starts at slot #1 again today.
-        # Bypass bans are NOT wiped: they must persist across the daily reset.
+        # NOTE: bypass_bans and shortener_cooldowns are deliberately NOT
+        # wiped: bans must persist across days, and the per-user 24h
+        # per-shortener cooldowns are also explicitly long-lived (only
+        # the /count daily counters reset at 00:00 IST).
         await self.pending_shortener.delete_many({})
 
     # ================================================================
