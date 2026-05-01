@@ -350,9 +350,8 @@ async def start_command(client: Client, message: Message):
                     # Link was invalidated (previous bypass / auto-expire / new
                     # short link issued). Refuse and re-issue.
                     await message.reply_text(
-                        "<blockquote>⏳ <b>ᴛʜɪs ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ʜᴀs ᴇxᴘɪʀᴇᴅ</b></blockquote>\n"
-                        "<blockquote>» ᴀ ɴᴇᴡ sʜᴏʀᴛ ʟɪɴᴋ ʜᴀs ʙᴇᴇɴ ɢᴇɴᴇʀᴀᴛᴇᴅ ʙᴇʟᴏᴡ.</blockquote>\n"
-                        "<blockquote>» ᴘʟᴇᴀsᴇ ᴄᴏᴍᴘʟᴇᴛᴇ ᴀʟʟ sᴛᴇᴘs ᴘʀᴏᴘᴇʀʟʏ ᴀɴᴅ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ.</blockquote>",
+                        "<blockquote>⏳ <b>ᴛʜɪs ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ʜᴀs ᴇxᴘɪʀᴇᴅ</b></blockquote>\n\n"
+                        "<blockquote>» ᴘʟᴇᴀꜱᴇ ᴅᴏɴ'ᴛ ᴜꜱᴇ ᴏʟᴅ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋꜱ, ᴋɪɴᴅʟʏ ʀᴇǫᴜᴇꜱᴛ ᴀ ɴᴇᴡ ʟɪɴᴋ ꜰᴏʀ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ.</blockquote>\n",
                         reply_markup=InlineKeyboardMarkup([
                             [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
                         ])
