@@ -28,7 +28,7 @@ def small_caps(text):
 # rohit_1888 on Tg
 # --------------------------------------------
 # Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8502483522:AAHTX_tMpgow7G84dAXZ-TrHT2-br_3ciX0")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8527937367:AAEudErU2zDG4gmtd7_bStETKKO4MxtAD0Y")
 APP_ID = int(os.environ.get("APP_ID", "27570787"))  # Your API ID from my.telegram.org
 API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39")  # Your API Hash from my.telegram.org
 # --------------------------------------------
