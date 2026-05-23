@@ -21,21 +21,19 @@ from pyrogram.types import BotCommand
 import sys
 import pytz
 from datetime import datetime
-#rohit_1888 on Tg
 from config import *
 from database.db_premium import *
 from database.database import *
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logging
 
-# Suppress APScheduler logs below WARNING level
 logging.getLogger("apscheduler").setLevel(logging.WARNING)
 
 scheduler = AsyncIOScheduler(timezone="Asia/Kolkata")
 scheduler.add_job(remove_expired_users, "interval", seconds=10)
 
-# Reset every daily counter (verify counts, per-shortener counts, premium
-# access records, sequential shortener progress) at 00:00 IST.
+
+# Daily reset at 00:00 IST — counters only, not bans or cooldowns
 async def daily_reset_task():
     try:
         await db.reset_all_verify_counts()
@@ -46,53 +44,60 @@ async def daily_reset_task():
     except Exception:
         pass
 
+
 scheduler.add_job(daily_reset_task, "cron", hour=0, minute=0)
 
 
+# Monthly referral reset — runs on the 1st of every month at 00:01 IST
+# Clears monthly invite/validate counts so milestones are fresh for the new month.
+# All-time invited lists (for de-dup) are preserved.
+async def monthly_referral_reset_task():
+    try:
+        await db.reset_monthly_referral_stats()
+        LOGGER(__name__).info("Monthly referral stats reset completed.")
+    except Exception as e:
+        LOGGER(__name__).warning(f"Monthly referral reset failed: {e}")
+
+
+scheduler.add_job(monthly_referral_reset_task, "cron", day=1, hour=0, minute=1)
+
+
 def get_indian_time():
-    """Returns the current time in IST."""
     ist = pytz.timezone("Asia/Kolkata")
     return datetime.now(ist)
 
 
-name = """
- BY CODEFLIX BOTS
-"""
-
-# ---------------------------------------------------------------------------
-# Telegram bot command menu (auto-registered on every startup via setMyCommands)
-# Order roughly mirrors the existing CMD_TXT help screen.
-# ---------------------------------------------------------------------------
 BOT_COMMANDS = [
-    BotCommand("start",          "Start the bot / fetch a file"),
-    BotCommand("myplan",         "Check your premium plan status"),
-    BotCommand("count",          "(Admin) daily counts dashboard"),
-    BotCommand("stats",          "(Admin) bot uptime"),
-    BotCommand("users",          "(Admin) total user count"),
-    BotCommand("broadcast",      "(Admin) broadcast to all users"),
-    BotCommand("dbroadcast",     "(Admin) auto-delete broadcast"),
-    BotCommand("pbroadcast",     "(Admin) pin broadcast"),
-    BotCommand("batch",          "(Admin) generate a batch link"),
-    BotCommand("genlink",        "(Admin) generate a single link"),
-    BotCommand("custom_batch",   "(Admin) custom batch link"),
-    BotCommand("dlt_time",       "(Admin) set file auto-delete timer"),
-    BotCommand("check_dlt_time", "(Admin) check current delete timer"),
-    BotCommand("ban",            "(Admin) ban a user"),
-    BotCommand("unban",          "(Admin) unban a user"),
-    BotCommand("banlist",        "(Admin) list banned users"),
-    BotCommand("addchnl",        "(Admin) add force-sub channel"),
-    BotCommand("delchnl",        "(Admin) remove force-sub channel"),
-    BotCommand("listchnl",       "(Admin) list force-sub channels"),
-    BotCommand("fsub_mode",      "(Admin) toggle request-fsub mode"),
-    BotCommand("delreq",         "(Admin) delete pending join requests"),
-    BotCommand("addpremium",     "(Admin) grant premium to a user"),
-    BotCommand("remove_premium", "(Admin) revoke premium from a user"),
-    BotCommand("premium_users",  "(Admin) list premium users"),
-    BotCommand("add_admin",      "(Owner) add a bot admin"),
-    BotCommand("deladmin",       "(Owner) remove a bot admin"),
-    BotCommand("admins",         "(Admin) list bot admins"),
-    BotCommand("hash",           "(Admin) hash settings"),
+    BotCommand("start",          "ꜱᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ / ꜰᴇᴛᴄʜ ᴀ ꜰɪʟᴇ"),
+    BotCommand("myplan",         "ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ ᴘʟᴀɴ ꜱᴛᴀᴛᴜꜱ"),
+    BotCommand("count",          "(ᴀᴅᴍɪɴ) ᴅᴀɪʟʏ ᴄᴏᴜɴᴛꜱ ᴅᴀꜱʜʙᴏᴀʀᴅ"),
+    BotCommand("stats",          "(ᴀᴅᴍɪɴ) ʙᴏᴛ ᴜᴘᴛɪᴍᴇ"),
+    BotCommand("users",          "(ᴀᴅᴍɪɴ) ᴛᴏᴛᴀʟ ᴜꜱᴇʀ ᴄᴏᴜɴᴛ"),
+    BotCommand("broadcast",      "(ᴀᴅᴍɪɴ) ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴛᴏ ᴀʟʟ ᴜꜱᴇʀꜱ"),
+    BotCommand("dbroadcast",     "(ᴀᴅᴍɪɴ) ᴀᴜᴛᴏ-ᴅᴇʟᴇᴛᴇ ʙʀᴏᴀᴅᴄᴀꜱᴛ"),
+    BotCommand("pbroadcast",     "(ᴀᴅᴍɪɴ) ᴘɪɴ ʙʀᴏᴀᴅᴄᴀꜱᴛ"),
+    BotCommand("batch",          "(ᴀᴅᴍɪɴ) ɢᴇɴᴇʀᴀᴛᴇ ᴀ ʙᴀᴛᴄʜ ʟɪɴᴋ"),
+    BotCommand("genlink",        "(ᴀᴅᴍɪɴ) ɢᴇɴᴇʀᴀᴛᴇ ᴀ ꜱɪɴɢʟᴇ ʟɪɴᴋ"),
+    BotCommand("custom_batch",   "(ᴀᴅᴍɪɴ) ᴄᴜꜱᴛᴏᴍ ʙᴀᴛᴄʜ ʟɪɴᴋ"),
+    BotCommand("dlt_time",       "(ᴀᴅᴍɪɴ) ꜱᴇᴛ ꜰɪʟᴇ ᴀᴜᴛᴏ-ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇʀ"),
+    BotCommand("check_dlt_time", "(ᴀᴅᴍɪɴ) ᴄʜᴇᴄᴋ ᴄᴜʀʀᴇɴᴛ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇʀ"),
+    BotCommand("ban",            "(ᴀᴅᴍɪɴ) ʙᴀɴ ᴀ ᴜꜱᴇʀ"),
+    BotCommand("unban",          "(ᴀᴅᴍɪɴ) ᴜɴʙᴀɴ ᴀ ᴜꜱᴇʀ"),
+    BotCommand("banlist",        "(ᴀᴅᴍɪɴ) ʟɪꜱᴛ ʙᴀɴɴᴇᴅ ᴜꜱᴇʀꜱ"),
+    BotCommand("addchnl",        "(ᴀᴅᴍɪɴ) ᴀᴅᴅ ꜰᴏʀᴄᴇ-ꜱᴜʙ ᴄʜᴀɴɴᴇʟ"),
+    BotCommand("delchnl",        "(ᴀᴅᴍɪɴ) ʀᴇᴍᴏᴠᴇ ꜰᴏʀᴄᴇ-ꜱᴜʙ ᴄʜᴀɴɴᴇʟ"),
+    BotCommand("listchnl",       "(ᴀᴅᴍɪɴ) ʟɪꜱᴛ ꜰᴏʀᴄᴇ-ꜱᴜʙ ᴄʜᴀɴɴᴇʟꜱ"),
+    BotCommand("fsub_mode",      "(ᴀᴅᴍɪɴ) ᴛᴏɢɢʟᴇ ʀᴇQᴜᴇꜱᴛ-ꜰꜱᴜʙ ᴍᴏᴅᴇ"),
+    BotCommand("delreq",         "(ᴀᴅᴍɪɴ) ᴅᴇʟᴇᴛᴇ ᴘᴇɴᴅɪɴɢ ᴊᴏɪɴ ʀᴇQᴜᴇꜱᴛꜱ"),
+    BotCommand("addpremium",     "(ᴀᴅᴍɪɴ) ɢʀᴀɴᴛ ᴘʀᴇᴍɪᴜᴍ"),
+    BotCommand("remove_premium", "(ᴀᴅᴍɪɴ) ʀᴇᴠᴏᴋᴇ ᴘʀᴇᴍɪᴜᴍ"),
+    BotCommand("premium_users",  "(ᴀᴅᴍɪɴ) ʟɪꜱᴛ ᴘʀᴇᴍɪᴜᴍ ᴜꜱᴇʀꜱ"),
+    BotCommand("add_admin",      "(ᴏᴡɴᴇʀ) ᴀᴅᴅ ᴀ ʙᴏᴛ ᴀᴅᴍɪɴ"),
+    BotCommand("deladmin",       "(ᴏᴡɴᴇʀ) ʀᴇᴍᴏᴠᴇ ᴀ ʙᴏᴛ ᴀᴅᴍɪɴ"),
+    BotCommand("admins",         "(ᴀᴅᴍɪɴ) ʟɪꜱᴛ ʙᴏᴛ ᴀᴅᴍɪɴꜱ"),
+    BotCommand("hash",           "(ᴀᴅᴍɪɴ) ʜᴀꜱʜ ꜱᴇᴛᴛɪɴɢꜱ"),
 ]
+
 
 class Bot(Client):
     def __init__(self):
@@ -114,9 +119,6 @@ class Bot(Client):
         usr_bot_me = await self.get_me()
         self.uptime = get_indian_time()
 
-        # Register the bot's command menu with Telegram on every startup so
-        # the suggestion list users see in the input box always matches the
-        # handlers actually wired up below.
         try:
             await self.set_bot_commands(BOT_COMMANDS)
             self.LOGGER(__name__).info(
@@ -128,46 +130,44 @@ class Bot(Client):
         try:
             db_channel = await self.get_chat(CHANNEL_ID)
             self.db_channel = db_channel
-            test = await self.send_message(chat_id = db_channel.id, text = "Test Message")
+            test = await self.send_message(chat_id=db_channel.id, text="Test Message")
             await test.delete()
         except Exception as e:
             self.LOGGER(__name__).warning(e)
-            self.LOGGER(__name__).warning(f"Make Sure bot is Admin in DB Channel, and Double check the CHANNEL_ID Value, Current Value {CHANNEL_ID}")
+            self.LOGGER(__name__).warning(
+                f"Make Sure bot is Admin in DB Channel, and Double check the CHANNEL_ID Value, "
+                f"Current Value {CHANNEL_ID}"
+            )
             self.LOGGER(__name__).info("\nBot Stopped.")
             sys.exit()
 
         self.set_parse_mode(ParseMode.HTML)
+        self.username = usr_bot_me.username
         self.LOGGER(__name__).info(f"Bot Running..!")
-        self.LOGGER(__name__).info(f"""       
-
+        self.LOGGER(__name__).info("""
 
   ___ ___  ___  ___ ___ _    _____  _____  ___ _____ ___ 
- / __/ _ \|   \| __| __| |  |_ _\ \/ / _ )/ _ \_   _/ __|
-| (_| (_) | |) | _|| _|| |__ | | >  <| _ \ (_) || | \__ \
- \___\___/|___/|___|_| |____|___/_/\_\___/\___/ |_| |___/
+ / __/ _ \\|   \\| __| __| |  |_ _\\ \\/ / _ \\/ _ \\_   _/ __|
+| (_| (_) | |) | _|| _|| |__ | | >  <| _ \\ (_) || | \\__ \\
+ \\___\\___/|___/|___|_| |____|___/_/\\_\\___/\\___/ |_| |___/
                                                          
- 
-                                          """)
-
-        self.set_parse_mode(ParseMode.HTML)
-        self.username = usr_bot_me.username
-        self.LOGGER(__name__).info(f"Bot Running..!")   
+        """)
 
         # Start Web Server
         app = web.AppRunner(await web_server())
         await app.setup()
         await web.TCPSite(app, "0.0.0.0", PORT).start()
 
-
-        try: await self.send_message(OWNER_ID, text = f"<b><blockquote> Bᴏᴛ Rᴇsᴛᴀʀᴛᴇᴅ ⛈️</blockquote></b>")
-        except: pass
+        try:
+            await self.send_message(OWNER_ID, text="<b><blockquote> ʙᴏᴛ ʀᴇsᴛᴀʀᴛᴇᴅ ⛈️</blockquote></b>")
+        except Exception:
+            pass
 
     async def stop(self, *args):
         await super().stop()
         self.LOGGER(__name__).info("Bot stopped.")
 
     def run(self):
-        """Run the bot."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.start())
         self.LOGGER(__name__).info("Bot is now running. Thanks to @rohit_1888")
@@ -178,11 +178,6 @@ class Bot(Client):
         finally:
             loop.run_until_complete(self.stop())
 
+
 #
 # Copyright (C) 2025 by Codeflix-Bots@Github, < https://github.com/Codeflix-Bots >.
-#
-# This file is part of < https://github.com/Codeflix-Bots/FileStore > project,
-# and is released under the MIT License.
-# Please see < https://github.com/Codeflix-Bots/FileStore/blob/master/LICENSE >
-#
-# All rights reserved.
