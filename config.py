@@ -44,7 +44,7 @@ DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://Test:aloksingh@cluster0.i
 DB_NAME = os.environ.get("DATABASE_NAME", "NewUpdate")
 # --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "300"))  # 0 means no expiry
-BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/OfficialAdminDMRoBot")
+BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/Ebadmindmbot")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # --------------------------------------------
 START_PIC = os.environ.get("START_PIC", "https://api.aniwallpaper.workers.dev/random?type=cute")
@@ -115,7 +115,7 @@ SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECO
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
 
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/DDNationalOfficial/9")
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheEroticBhabhiOfficial/8")
 SHORT_MSG = "<b><blockquote>⌯ ʜᴇʀᴇ ɪꜱ ʏᴏᴜʀ ʟɪɴᴋ, ɪꜰ ʏᴏᴜ ᴀʀᴇ ɴᴇᴡ ʜᴇʀᴇ ᴛʜᴇɴ ʏᴏᴜ ᴍᴜꜱᴛ ᴡᴀᴛᴄʜ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴄʟɪᴄᴋɪɴɢ ᴏɴ ᴅᴏᴡɴʟᴏᴀᴅ...</blockquote></b>"
 
 SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/LD7Nsqm0/Ani-Wallpaper-dfc7d4-hd-Blaze-update-Z.jpg")
@@ -126,7 +126,7 @@ HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheErotic
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheEroticBhabhiOfficial</blockquote>\n\n"
-    f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/OfficialAdminDMRoBot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
+    f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/Ebadmindmbot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
 # --------------------------------------------
