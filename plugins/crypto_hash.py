@@ -159,17 +159,56 @@ async def hash_command(client: Client, message: Message):
     await show_hash_panel(client, message)
 
 
+VMODE_INFO = {
+    'instant': {
+        'label': '⚡ ɪɴsᴛᴀɴᴛ',
+        'description': 'ᴜsᴇʀ ᴍᴜsᴛ sᴏʟᴠᴇ ᴜʀʟ sʜᴏʀᴛᴇɴᴇʀ ᴏɴ ᴇᴠᴇʀʏ ɴᴇᴡ ʟɪɴᴋ',
+    },
+    '12h': {
+        'label': '🕛 12 ʜᴏᴜʀs',
+        'description': 'ᴜsᴇʀ ꜱᴏʟᴠᴇꜱ ᴏɴᴄᴇ ᴀɴᴅ ɢᴇᴛs 12ʜ ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱ',
+    },
+    '24h': {
+        'label': '🕐 24 ʜᴏᴜʀs',
+        'description': 'ᴜsᴇʀ ꜱᴏʟᴠᴇꜱ ᴏɴᴄᴇ ᴀɴᴅ ɢᴇᴛs 24ʜ ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱ',
+    },
+}
+
+
 async def show_hash_panel(client, query_or_message):
-    """Display the hash algorithm selection panel."""
+    """Display the hash algorithm selection + verification mode + invite mode panel."""
     current_algo = await db.get_hash_algorithm()
     current_info = ALGORITHMS.get(current_algo, ALGORITHMS["sha256"])
+    current_vmode = await db.get_verification_mode()
+    vmode_info = VMODE_INFO.get(current_vmode, VMODE_INFO['instant'])
+    invite_mode = await db.get_invite_link_mode()
+    invite_channel_id = await db.get_invite_channel()
+
+    # Build invite mode status line for caption
+    if invite_mode == "channel":
+        if invite_channel_id:
+            try:
+                ch = await client.get_chat(invite_channel_id)
+                ch_label = f"#{ch.title}"
+            except Exception:
+                ch_label = str(invite_channel_id)
+            invite_mode_line = f"🔗 ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ ({ch_label})"
+        else:
+            invite_mode_line = "🔗 ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ (⚠️ ɴᴏ ᴄʜᴀɴɴᴇʟ sᴇᴛ — ᴜsᴇ /ɪᴄʜᴀɴɴᴇʟ)"
+    else:
+        invite_mode_line = "🤖 ʙᴏᴛ ʟɪɴᴋ (ᴅᴇꜰᴀᴜʟᴛ)"
 
     caption = (
         "<blockquote><b>✦ ʜᴀsʜ ᴀʟɢᴏʀɪᴛʜᴍ sᴇᴛᴛɪɴɢs</b></blockquote>\n\n"
         f"<b>• ᴄᴜʀʀᴇɴᴛ ᴀʟɢᴏʀɪᴛʜᴍ:</b> {current_info['icon']} {current_info['name']}\n"
         f"<b>• ᴅᴇsᴄʀɪᴘᴛɪᴏɴ:</b> {current_info['description']}\n"
         f"<b>• ᴏᴜᴛᴘᴜᴛ ʟᴇɴɢᴛʜ:</b> {current_info['output_len']}\n\n"
-        "<blockquote><b>≡ sᴇʟᴇᴄᴛ ᴀɴ ᴀʟɢᴏʀɪᴛʜᴍ ʙᴇʟᴏᴡ ᴛᴏ ᴜsᴇ ғᴏʀ ʟɪɴᴋ ᴍᴀsᴋɪɴɢ</b></blockquote>"
+        "<blockquote><b>≡ sᴇʟᴇᴄᴛ ᴀɴ ᴀʟɢᴏʀɪᴛʜᴍ ʙᴇʟᴏᴡ ᴛᴏ ᴜsᴇ ғᴏʀ ʟɪɴᴋ ᴍᴀsᴋɪɴɢ</b></blockquote>\n\n"
+        "<blockquote><b>⚙️ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ᴍᴏᴅᴇ</b></blockquote>\n"
+        f"<b>• ᴄᴜʀʀᴇɴᴛ ᴍᴏᴅᴇ:</b> {vmode_info['label']}\n"
+        f"<b>• ɪɴꜰᴏ:</b> {vmode_info['description']}\n\n"
+        "<blockquote><b>🔗 ɪɴᴠɪᴛᴇ ʟɪɴᴋ ᴍᴏᴅᴇ</b></blockquote>\n"
+        f"<b>• ᴄᴜʀʀᴇɴᴛ:</b> {invite_mode_line}"
     )
 
     # Build algorithm buttons with current selection marked
@@ -182,7 +221,31 @@ async def show_hash_panel(client, query_or_message):
                 callback_data=f"set_hash_{algo_key}"
             )
         ])
-    
+
+    # Verification mode row — all three options in one row, ✓ on active
+    vmode_row = []
+    for vkey, vinfo in VMODE_INFO.items():
+        marker = " ✓" if vkey == current_vmode else ""
+        vmode_row.append(
+            InlineKeyboardButton(
+                f"{vinfo['label']}{marker}",
+                callback_data=f"set_vmode_{vkey}"
+            )
+        )
+    buttons.append(vmode_row)
+
+    # Invite link mode toggle row
+    buttons.append([
+        InlineKeyboardButton(
+            f"🤖 ʙᴏᴛ ʟɪɴᴋ{' ✓' if invite_mode == 'bot' else ''}",
+            callback_data="set_invite_mode_bot"
+        ),
+        InlineKeyboardButton(
+            f"🔗 ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ{' ✓' if invite_mode == 'channel' else ''}",
+            callback_data="set_invite_mode_channel"
+        ),
+    ])
+
     buttons.append([InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")])
 
     reply_markup = InlineKeyboardMarkup(buttons)
@@ -226,4 +289,58 @@ async def set_hash_callback(client: Client, query: CallbackQuery):
     )
 
     # Refresh the panel
+    await show_hash_panel(client, query)
+
+
+@Bot.on_callback_query(filters.regex(r'^set_vmode_'))
+async def set_vmode_callback(client: Client, query: CallbackQuery):
+    """Handle verification mode selection button clicks."""
+    user_id = query.from_user.id
+    if user_id != OWNER_ID and not await db.admin_exist(user_id):
+        return await query.answer("⚠️ Only admins can change this setting.", show_alert=True)
+
+    mode_key = query.data.replace("set_vmode_", "")
+
+    if mode_key not in VMODE_INFO:
+        return await query.answer("❌ Invalid mode!", show_alert=True)
+
+    await db.set_verification_mode(mode_key)
+
+    vinfo = VMODE_INFO[mode_key]
+    await query.answer(
+        f"✅ Verification mode set to {vinfo['label']}!",
+        show_alert=True
+    )
+
+    await show_hash_panel(client, query)
+
+
+@Bot.on_callback_query(filters.regex(r'^set_invite_mode_'))
+async def set_invite_mode_callback(client: Client, query: CallbackQuery):
+    """Handle invite link mode toggle — bot link vs channel link."""
+    user_id = query.from_user.id
+    if user_id != OWNER_ID and not await db.admin_exist(user_id):
+        return await query.answer("⚠️ Only admins can change this setting.", show_alert=True)
+
+    mode = query.data.replace("set_invite_mode_", "")   # "bot" or "channel"
+
+    if mode not in ("bot", "channel"):
+        return await query.answer("❌ Unknown mode.", show_alert=True)
+
+    await db.set_invite_link_mode(mode)
+
+    if mode == "channel":
+        channel_id = await db.get_invite_channel()
+        if not channel_id:
+            await query.answer(
+                "✅ Mode set to Channel Link.\n\n"
+                "⚠️ No invite channel configured yet!\n"
+                "Use /ichannel <channel_id> to set one.",
+                show_alert=True
+            )
+        else:
+            await query.answer("✅ Invite mode set to Channel Link!", show_alert=False)
+    else:
+        await query.answer("✅ Invite mode set to Bot Link!", show_alert=False)
+
     await show_hash_panel(client, query)
