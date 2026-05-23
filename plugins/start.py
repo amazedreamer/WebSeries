@@ -121,6 +121,7 @@ async def short_url(client: Client, message: Message, base64_string):
                     f"• ɴᴇᴠᴇʀ ᴡᴀɪᴛ ᴀɢᴀɪɴ ✨.</blockquote>"
                 ),
                 reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")],
                     [InlineKeyboardButton("🎁 ɢᴇᴛ ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ", callback_data="free_premium")],
                     [InlineKeyboardButton(f"⏰ ᴄᴏᴍᴇ ʙᴀᴄᴋ ɪɴ {wait_str}", callback_data="close")],
                 ]),
@@ -133,6 +134,7 @@ async def short_url(client: Client, message: Message, base64_string):
             [InlineKeyboardButton("🔰 ᴏᴘᴇɴ ʟɪɴᴋ 🔰", url=masked_link)],
             [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
             [
+                InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ", callback_data="premium"),
                 InlineKeyboardButton("🎁 ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ", callback_data="free_premium"),
             ],
         ]
@@ -604,7 +606,7 @@ chat_data_cache = {}
 
 
 async def not_joined(client: Client, message: Message, start_param: str = ""):
-    temp = await message.reply("👋")
+    temp = await message.reply("<b>(●'◡'●)</b>")
     user_id = message.from_user.id
     buttons = []
     count = 0
@@ -644,12 +646,12 @@ async def not_joined(client: Client, message: Message, start_param: str = ""):
 
                     buttons.append([InlineKeyboardButton(text=name, url=link)])
                     count += 1
-                    await temp.edit(f"<b>{'‼️' * count}</b>")
+                    await temp.edit(f"<b>{'! ' * count}</b>")
 
                 except Exception as e:
                     print(f"Error with chat {chat_id}: {e}")
                     return await temp.edit(
-                        f"<b><i>! ᴇʀʀᴏʀ, ᴄᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ᴛᴏ ꜱᴏʟᴠᴇ ᴛʜᴇ ɪꜱꜱᴜᴇꜱ @sakxxiii</i></b>\n"
+                        f"<b><i>! ᴇʀʀᴏʀ, ᴄᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ ᴛᴏ ꜱᴏʟᴠᴇ ᴛʜᴇ ɪꜱꜱᴜᴇꜱ @sakxxii</i></b>\n"
                         f"<blockquote expandable><b>ʀᴇᴀꜱᴏɴ:</b> {e}</blockquote>"
                     )
 
@@ -681,7 +683,7 @@ async def not_joined(client: Client, message: Message, start_param: str = ""):
     except Exception as e:
         print(f"Final Error: {e}")
         await temp.edit(
-            f"<b><i>! ᴇʀʀᴏʀ, ᴄᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ @sakxxiii</i></b>\n"
+            f"<b><i>! ᴇʀʀᴏʀ, ᴄᴏɴᴛᴀᴄᴛ ᴅᴇᴠᴇʟᴏᴘᴇʀ @sakxxii</i></b>\n"
             f"<blockquote expandable><b>ʀᴇᴀꜱᴏɴ:</b> {e}</blockquote>"
         )
 
