@@ -125,14 +125,14 @@ SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/LD7Nsqm0/Ani-W
 HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheEroticBhabhiOfficial\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheEroticBhabhiOfficial>TheEroticBhabhi</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @DDNationalFreeDish</blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheEroticBhabhiOfficial</blockquote>\n\n"
     f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/OfficialAdminDMRoBot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
 # --------------------------------------------
 START_MSG = (
     f"<blockquote>👤 <b>{small_caps('ᴡᴇʟᴄᴏᴍᴇ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @DDNationalFreeDish</blockquote>\n"
+    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheEroticBhabhiOfficial</blockquote>\n"
     f"<blockquote>{small_caps('ᴜsᴇ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ.')}</blockquote>"
 )
 
@@ -166,7 +166,7 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇғᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @DDNationalFreeDish</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @TheEroticBhabhiOfficial</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'True'
@@ -176,23 +176,58 @@ USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇ
 
 # ==========================(BUY PREMIUM)====================#
 
-OWNER_TAG = os.environ.get("OWNER_TAG", "OfficialAdminDMRoBot")
-UPI_ID = os.environ.get("UPI_ID", "uneven@ikwik")
+OWNER_TAG = os.environ.get("OWNER_TAG", "Ebadmindmbot")
+UPI_ID = os.environ.get("UPI_ID", "BHARATPE.8R0Z0S8K2K37074@fbpe")
+UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "Vikas Meena")
 QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/ZR2x7YSJ/photo-2026-01-03-23-54-09.jpg")
-SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/OfficialAdminDMRoBot")
+SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/Ebadmindmbot")
 # --------------------------------------------
 # Time and its price
-# 7 Days
-PRICE1 = os.environ.get("PRICE1", "₹ 60")
+# 10 Days
+PRICE1 = os.environ.get("PRICE1", "60 rs")
 # 1 Month
-PRICE2 = os.environ.get("PRICE2", "₹ 110")
+PRICE2 = os.environ.get("PRICE2", "110 rs")
 # 3 Month
-PRICE3 = os.environ.get("PRICE3", "₹ 260")
+PRICE3 = os.environ.get("PRICE3", "260 rs")
 # 6 Month
-PRICE4 = os.environ.get("PRICE4", "₹ 500")
+PRICE4 = os.environ.get("PRICE4", "500 rs")
 # 1 Year
-PRICE5 = os.environ.get("PRICE5", "₹ 900")
+PRICE5 = os.environ.get("PRICE5", "900 rs")
 
+# Super Premium Prices
+PRICE_SP_1 = os.environ.get("PRICE_SP_1", "70 rs")
+PRICE_SP_2 = os.environ.get("PRICE_SP_2", "120 rs")
+PRICE_SP_3 = os.environ.get("PRICE_SP_3", "300 rs")
+PRICE_SP_4 = os.environ.get("PRICE_SP_4", "550 rs")
+PRICE_SP_5 = os.environ.get("PRICE_SP_5", "1000 rs")
+
+# Plan definitions (used by buy-premium flow to generate QR + buttons)
+# key format: np_<id> for normal, sp_<id> for super
+NORMAL_PLANS = [
+    {"key": "np_0", "label": "𝟷𝟶 ᴅᴀʏs",    "days": 10,  "price_str": PRICE1},
+    {"key": "np_1", "label": "𝟶𝟷 ᴍᴏɴᴛʜ",   "days": 30,  "price_str": PRICE2},
+    {"key": "np_2", "label": "𝟶𝟹 ᴍᴏɴᴛʜs",  "days": 90,  "price_str": PRICE3},
+    {"key": "np_3", "label": "𝟶𝟼 ᴍᴏɴᴛʜs",  "days": 180, "price_str": PRICE4},
+    {"key": "np_4", "label": "𝟶𝟷 ʏᴇᴀʀ",    "days": 365, "price_str": PRICE5},
+]
+SUPER_PLANS = [
+    {"key": "sp_0", "label": "𝟶𝟷 ᴍᴏɴᴛʜ",   "days": 130,  "price_str": PRICE_SP_2},
+    {"key": "sp_1", "label": "𝟶𝟹 ᴍᴏɴᴛʜs",  "days": 190,  "price_str": PRICE_SP_3},
+    {"key": "sp_2", "label": "𝟶𝟼 ᴍᴏɴᴛʜs",  "days": 280, "price_str": PRICE_SP_4},
+    {"key": "sp_3", "label": "𝟶𝟷 ʏᴇᴀʀ",    "days": 550, "price_str": PRICE_SP_5},
+]
+
+ALL_PLANS = {p["key"]: p for p in NORMAL_PLANS + SUPER_PLANS}
+
+# ===================(END)========================#
+
+# ==========================(REFERRAL SYSTEM)====================#
+# Milestones: (min_validated_invites, free_days_normal_premium)
+REFERRAL_MILESTONES = [
+    (3,  2,  "2 ᴅᴀʏs"),
+    (10, 7,  "7 ᴅᴀʏs"),
+    (40, 30, "1 ᴍᴏɴᴛʜ"),
+]
 # ===================(END)========================#
 
 LOG_FILE_NAME = "filesharingbot.txt"
