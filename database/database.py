@@ -24,8 +24,11 @@ default_verify = {
 
 
 def _today_ist() -> str:
-    """Return today's date string in IST (matches the bot's daily reset cron)."""
     return datetime.now(_tz("Asia/Kolkata")).strftime("%Y-%m-%d")
+
+
+def _current_month_ist() -> str:
+    return datetime.now(_tz("Asia/Kolkata")).strftime("%Y-%m")
 
 
 def new_user(id):
@@ -59,41 +62,68 @@ class Rohit:
         self.hash_settings = self.database['hash_settings']
         self.masked_links = self.database['masked_links']
         self.fingerprint_tokens = self.database['fingerprint_tokens']
-        # Per-user sequential shortener progress (sticks to 1 slot until success).
         self.shortener_progress = self.database['shortener_progress']
-        # Daily counters for /count (per-shortener success, premium accesses, etc.)
         self.daily_stats = self.database['daily_stats']
-        # Per-premium-user unique link access record (one doc per user+link+date).
         self.premium_access = self.database['premium_access']
-        # Bypass protection: pending short-link records + escalating ban store.
         self.pending_shortener = self.database['pending_shortener']
-        # Per-user, per-shortener 24h usage cooldowns. Persists across the
-        # daily 00:00 IST reset (only the daily counters reset, NOT cooldowns).
-        # Doc shape:
-        #   { _id: user_id,
-        #     cooldowns: { "<slot_idx>": unix_ts_until, ... } }
         self.shortener_cooldowns = self.database['shortener_cooldowns']
         self.bypass_bans = self.database['bypass_bans']
+        self.shortener_access = self.database['shortener_access']
 
+        # ── Referral system ──────────────────────────────────────────────────
+        # referrals: { _id: referrer_id,
+        #              invite_code: "ref<user_id>",
+        #              all_time_invited: [invitee_id, ...],  # ever joined via this link
+        #              monthly: { "YYYY-MM": { invited: [ids], validated: [ids] } }
+        #              rewards_given: { "YYYY-MM": [3, 10, 40] }  # milestones rewarded this month
+        #            }
+        self.referrals = self.database['referrals']
+
+        # referral_joins: { _id: invitee_id,
+        #                   referrer_id: int,
+        #                   joined_at: ts,
+        #                   validated: bool,
+        #                   plan_bought: bool }
+        self.referral_joins = self.database['referral_joins']
+
+        # invite_channel_settings: { _id: "settings", channel_id: int, mode: "bot"|"channel" }
+        self.invite_channel_settings = self.database['invite_channel_settings']
+
+        # user_channel_invites: { _id: user_id (referrer),
+        #                         channel_id: int,
+        #                         invite_link: str,   ← unique link created per user
+        #                         created_at: float,
+        #                         joined_users: [invitee_id, ...] }
+        # Queried both by _id (user→link) and invite_link field (link→user)
+        self.user_channel_invites = self.database['user_channel_invites']
+
+        # payment_requests: { _id: user_id,
+        #                     plan_key: str, plan_type: str, days: int, amount: int,
+        #                     status: "pending"|"approved"|"rejected",
+        #                     requested_at: ts,
+        #                     admin_msg_ids: [(admin_id, msg_id), ...] }
+        self.payment_requests = self.database['payment_requests']
+
+    # ═══════════════════════════════════════════════════════════
     # USER DATA
+    # ═══════════════════════════════════════════════════════════
     async def present_user(self, user_id: int):
         found = await self.user_data.find_one({'_id': user_id})
         return bool(found)
 
     async def add_user(self, user_id: int):
         await self.user_data.insert_one({'_id': user_id})
-        return
 
     async def full_userbase(self):
         user_docs = await self.user_data.find().to_list(length=None)
-        user_ids = [doc['_id'] for doc in user_docs]
-        return user_ids
+        return [doc['_id'] for doc in user_docs]
 
     async def del_user(self, user_id: int):
         await self.user_data.delete_one({'_id': user_id})
-        return
 
+    # ═══════════════════════════════════════════════════════════
     # ADMIN DATA
+    # ═══════════════════════════════════════════════════════════
     async def admin_exist(self, admin_id: int):
         found = await self.admins_data.find_one({'_id': admin_id})
         return bool(found)
@@ -101,19 +131,18 @@ class Rohit:
     async def add_admin(self, admin_id: int):
         if not await self.admin_exist(admin_id):
             await self.admins_data.insert_one({'_id': admin_id})
-            return
 
     async def del_admin(self, admin_id: int):
         if await self.admin_exist(admin_id):
             await self.admins_data.delete_one({'_id': admin_id})
-            return
 
     async def get_all_admins(self):
         users_docs = await self.admins_data.find().to_list(length=None)
-        user_ids = [doc['_id'] for doc in users_docs]
-        return user_ids
+        return [doc['_id'] for doc in users_docs]
 
+    # ═══════════════════════════════════════════════════════════
     # BAN USER DATA
+    # ═══════════════════════════════════════════════════════════
     async def ban_user_exist(self, user_id: int):
         found = await self.banned_user_data.find_one({'_id': user_id})
         return bool(found)
@@ -121,19 +150,24 @@ class Rohit:
     async def add_ban_user(self, user_id: int):
         if not await self.ban_user_exist(user_id):
             await self.banned_user_data.insert_one({'_id': user_id})
-            return
 
     async def del_ban_user(self, user_id: int):
         if await self.ban_user_exist(user_id):
             await self.banned_user_data.delete_one({'_id': user_id})
-            return
 
     async def get_ban_users(self):
         users_docs = await self.banned_user_data.find().to_list(length=None)
-        user_ids = [doc['_id'] for doc in users_docs]
-        return user_ids
+        return [doc['_id'] for doc in users_docs]
 
+    # ── Full unban: clear both ban lists + bypass bans ───────────────────────
+    async def full_unban_user(self, user_id: int):
+        """Remove a user from ALL ban stores: manual ban list + bypass-protection bans."""
+        await self.banned_user_data.delete_one({'_id': user_id})
+        await self.bypass_bans.delete_one({'_id': user_id})
+
+    # ═══════════════════════════════════════════════════════════
     # AUTO DELETE TIMER SETTINGS
+    # ═══════════════════════════════════════════════════════════
     async def set_del_timer(self, value: int):
         existing = await self.del_timer_data.find_one({})
         if existing:
@@ -147,7 +181,9 @@ class Rohit:
             return data.get('value', 600)
         return 0
 
+    # ═══════════════════════════════════════════════════════════
     # CHANNEL MANAGEMENT
+    # ═══════════════════════════════════════════════════════════
     async def channel_exist(self, channel_id: int):
         found = await self.fsub_data.find_one({'_id': channel_id})
         return bool(found)
@@ -155,17 +191,17 @@ class Rohit:
     async def add_channel(self, channel_id: int):
         if not await self.channel_exist(channel_id):
             await self.fsub_data.insert_one({'_id': channel_id})
-            return
 
     async def rem_channel(self, channel_id: int):
         if await self.channel_exist(channel_id):
             await self.fsub_data.delete_one({'_id': channel_id})
-            return
+
+    async def del_channel(self, channel_id: int):
+        await self.rem_channel(channel_id)
 
     async def show_channels(self):
         channel_docs = await self.fsub_data.find().to_list(length=None)
-        channel_ids = [doc['_id'] for doc in channel_docs]
-        return channel_ids
+        return [doc['_id'] for doc in channel_docs]
 
     async def get_channel_mode(self, channel_id: int):
         data = await self.fsub_data.find_one({'_id': channel_id})
@@ -178,7 +214,9 @@ class Rohit:
             upsert=True
         )
 
+    # ═══════════════════════════════════════════════════════════
     # REQUEST FORCE-SUB MANAGEMENT
+    # ═══════════════════════════════════════════════════════════
     async def req_user(self, channel_id: int, user_id: int):
         try:
             await self.rqst_fsub_Channel_data.update_one(
@@ -210,7 +248,9 @@ class Rohit:
         channel_ids = await self.show_channels()
         return channel_id in channel_ids
 
+    # ═══════════════════════════════════════════════════════════
     # VERIFICATION MANAGEMENT
+    # ═══════════════════════════════════════════════════════════
     async def db_verify_status(self, user_id):
         user = await self.user_data.find_one({'_id': user_id})
         if user:
@@ -221,8 +261,7 @@ class Rohit:
         await self.user_data.update_one({'_id': user_id}, {'$set': {'verify_status': verify}})
 
     async def get_verify_status(self, user_id):
-        verify = await self.db_verify_status(user_id)
-        return verify
+        return await self.db_verify_status(user_id)
 
     async def update_verify_status(self, user_id, verify_token="", is_verified=False, verified_time=0, link=""):
         current = await self.db_verify_status(user_id)
@@ -245,13 +284,13 @@ class Rohit:
         await self.sex_data.update_many({}, {'$set': {'verify_count': 0}})
 
     async def get_total_verify_count(self):
-        pipeline = [
-            {"$group": {"_id": None, "total": {"$sum": "$verify_count"}}}
-        ]
+        pipeline = [{"$group": {"_id": None, "total": {"$sum": "$verify_count"}}}]
         result = await self.sex_data.aggregate(pipeline).to_list(length=1)
         return result[0]["total"] if result else 0
 
+    # ═══════════════════════════════════════════════════════════
     # HASH ALGORITHM SETTINGS
+    # ═══════════════════════════════════════════════════════════
     async def set_hash_algorithm(self, algo: str):
         await self.hash_settings.update_one(
             {'_id': 'current_algo'},
@@ -265,7 +304,48 @@ class Rohit:
             return data.get('value', 'sha256')
         return 'sha256'
 
+    # ═══════════════════════════════════════════════════════════
+    # VERIFICATION MODE SETTINGS
+    # ═══════════════════════════════════════════════════════════
+    async def set_verification_mode(self, mode: str):
+        if mode not in ('instant', '12h', '24h'):
+            mode = 'instant'
+        await self.hash_settings.update_one(
+            {'_id': 'verification_mode'},
+            {'$set': {'value': mode}},
+            upsert=True
+        )
+
+    async def get_verification_mode(self) -> str:
+        data = await self.hash_settings.find_one({'_id': 'verification_mode'})
+        if data:
+            return data.get('value', 'instant')
+        return 'instant'
+
+    # ═══════════════════════════════════════════════════════════
+    # PER-USER TIME-BASED ACCESS GRANTS (12h / 24h mode)
+    # ═══════════════════════════════════════════════════════════
+    async def grant_shortener_access(self, user_id: int, hours: int):
+        granted_until = time.time() + (int(hours) * 3600)
+        await self.shortener_access.update_one(
+            {'_id': int(user_id)},
+            {'$set': {'granted_until': float(granted_until)}},
+            upsert=True
+        )
+
+    async def check_shortener_access(self, user_id: int) -> tuple:
+        doc = await self.shortener_access.find_one({'_id': int(user_id)})
+        if not doc:
+            return (False, 0)
+        until = float(doc.get('granted_until', 0))
+        remaining = until - time.time()
+        if remaining > 0:
+            return (True, int(remaining))
+        return (False, 0)
+
+    # ═══════════════════════════════════════════════════════════
     # MASKED LINKS
+    # ═══════════════════════════════════════════════════════════
     async def store_masked_link(self, hash_id: str, target: str, algorithm: str):
         await self.masked_links.insert_one({
             '_id': hash_id,
@@ -283,7 +363,9 @@ class Rohit:
             {'$set': {'used': True, 'used_at': time.time()}}
         )
 
+    # ═══════════════════════════════════════════════════════════
     # FINGERPRINT TOKENS
+    # ═══════════════════════════════════════════════════════════
     async def store_fp_token(self, token: str, hash_id: str, expires: float):
         await self.fingerprint_tokens.insert_one({
             '_id': token,
@@ -303,108 +385,48 @@ class Rohit:
         if time.time() > doc['expires']:
             await self.fingerprint_tokens.delete_one({'_id': token})
             return False
-        await self.fingerprint_tokens.update_one(
-            {'_id': token},
-            {'$set': {'used': True}}
-        )
+        await self.fingerprint_tokens.update_one({'_id': token}, {'$set': {'used': True}})
         return True
 
-    # ================================================================
+    # ═══════════════════════════════════════════════════════════
     # PER-USER SEQUENTIAL SHORTENER PROGRESS
-    #
-    # The bot serves one shortener at a time and STICKS to it until the
-    # user successfully completes it (returns via the yu3elk callback).
-    # Only then does it advance to the next slot, in strict order:
-    #     Shortener 1 → Shortener 2 → ... → Shortener N
-    # When all N are completed, the user is rate-limited until the
-    # daily reset (00:00 IST), at which point the progress wipes and
-    # they start over from Shortener 1.
-    #
-    # DB document shape (one per user):
-    # {
-    #   _id: user_id,
-    #   current_idx: 0,          # next slot to serve (0..N)
-    #   pending_idx: -1,         # slot user is mid-completion on (-1 if none)
-    #   date: 'YYYY-MM-DD'       # IST date — auto-resets when this changes
-    # }
-    # ================================================================
-
+    # ═══════════════════════════════════════════════════════════
     async def _get_progress_doc(self, user_id: int) -> dict:
         doc = await self.shortener_progress.find_one({'_id': user_id})
         return doc or {}
 
     async def _ensure_today(self, user_id: int) -> dict:
-        """Return the user's progress doc, resetting it if the date rolled over."""
         today = _today_ist()
         doc = await self._get_progress_doc(user_id)
         if not doc or doc.get('date') != today:
-            doc = {
-                '_id': user_id,
-                'current_idx': 0,
-                'pending_idx': -1,
-                'date': today,
-            }
+            doc = {'_id': user_id, 'current_idx': 0, 'pending_idx': -1, 'date': today}
             await self.shortener_progress.update_one(
                 {'_id': user_id},
-                {'$set': {
-                    'current_idx': 0,
-                    'pending_idx': -1,
-                    'date': today,
-                }},
+                {'$set': {'current_idx': 0, 'pending_idx': -1, 'date': today}},
                 upsert=True
             )
         return doc
 
     async def pick_sequential_shortener(self, user_id: int, total_providers: int) -> tuple:
-        """
-        Pick the shortener slot to serve next for this user.
-
-        Sequential rotation (Shortener 1 → 2 → ... → N) is preserved, but
-        any slot the user has used in the last 24 hours is SKIPPED — even
-        across the daily reset. The 24h per-slot cooldown is applied at the
-        moment of a successful completion (see `mark_shortener_used`).
-
-        Returns (idx, is_available):
-            (idx, True)  → serve providers[idx]; the user must complete it
-                            before being moved off this slot.
-            (-1, False)  → every still-rotatable slot is on cooldown for
-                            this user; caller should look up the wait time
-                            via `next_shortener_unlock_seconds`.
-
-        Stickiness rule:
-            If a `pending_idx` is already set (user was sent a link earlier
-            and hasn't completed it yet), the SAME slot is returned every
-            time so the user keeps seeing the same shortener until it
-            works — unless that slot has somehow entered cooldown (defensive
-            edge case), in which case the sticky lock is cleared.
-        """
         doc = await self._ensure_today(user_id)
-        cooldowns = await self.get_shortener_cooldowns(user_id)  # {int: until_ts}
+        cooldowns = await self.get_shortener_cooldowns(user_id)
 
-        # Sticky: user is mid-flow on a slot — keep handing them the same one.
         pending = doc.get('pending_idx', -1)
         if pending is not None and pending >= 0 and pending < total_providers:
             if pending not in cooldowns:
                 return (pending, True)
-            # Defensive: pending slot is now on cooldown — clear and re-pick.
             await self.shortener_progress.update_one(
-                {'_id': user_id},
-                {'$set': {'pending_idx': -1}},
-                upsert=True
+                {'_id': user_id}, {'$set': {'pending_idx': -1}}, upsert=True
             )
 
-        # Walk forward from current_idx, skipping any slot still on cooldown.
         current = doc.get('current_idx', 0)
         i = current
         while i < total_providers and i in cooldowns:
             i += 1
 
         if i >= total_providers:
-            # No rotatable slot available right now — caller will show the
-            # cooldown / "buy premium" message with a wait time.
             return (-1, False)
 
-        # Persist the advanced pointer + lock the user onto this slot.
         await self.shortener_progress.update_one(
             {'_id': user_id},
             {'$set': {'current_idx': i, 'pending_idx': i}},
@@ -413,12 +435,6 @@ class Rohit:
         return (i, True)
 
     async def consume_shortener_success(self, user_id: int) -> int:
-        """
-        Mark the user's CURRENT pending shortener as completed and advance
-        them to the next one. Returns the slot index that was completed,
-        or -1 if there was nothing pending (e.g. repeat click on a link
-        the user has already redeemed today — must NOT be double-counted).
-        """
         doc = await self._ensure_today(user_id)
         pending = doc.get('pending_idx', -1)
         if pending is None or pending < 0:
@@ -427,35 +443,20 @@ class Rohit:
         new_current = max(doc.get('current_idx', 0), pending + 1)
         await self.shortener_progress.update_one(
             {'_id': user_id},
-            {'$set': {
-                'current_idx': new_current,
-                'pending_idx': -1,
-            }},
+            {'$set': {'current_idx': new_current, 'pending_idx': -1}},
             upsert=True
         )
         return pending
 
     async def seconds_until_daily_reset(self) -> int:
-        """Seconds remaining until the next 00:00 IST daily reset."""
         now = datetime.now(_tz("Asia/Kolkata"))
-        tomorrow = (now + timedelta(days=1)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         return max(0, int((tomorrow - now).total_seconds()))
 
-    # ================================================================
+    # ═══════════════════════════════════════════════════════════
     # PER-USER 24-HOUR PER-SHORTENER COOLDOWN
-    #
-    # When a user successfully completes shortener slot `i`, that slot
-    # becomes locked for that user for the next 24 hours. The lock is
-    # NOT cleared by the daily 00:00 IST reset — only the daily counters
-    # reset. The picker (`pick_sequential_shortener`) skips any slot
-    # whose cooldown has not yet expired.
-    # ================================================================
-
-    async def mark_shortener_used(self, user_id: int, slot_idx: int,
-                                  hours: int = 24):
-        """Lock `slot_idx` for `user_id` for the next `hours` hours."""
+    # ═══════════════════════════════════════════════════════════
+    async def mark_shortener_used(self, user_id: int, slot_idx: int, hours: int = 24):
         if slot_idx is None or slot_idx < 0:
             return
         until = time.time() + (int(hours) * 3600)
@@ -466,11 +467,6 @@ class Rohit:
         )
 
     async def get_shortener_cooldowns(self, user_id: int) -> dict:
-        """
-        Return {slot_idx_int: until_ts} for slots whose cooldown is still
-        in the future. Expired entries are filtered out (and lazily
-        cleaned up so the doc doesn't grow forever).
-        """
         doc = await self.shortener_cooldowns.find_one({'_id': int(user_id)})
         if not doc:
             return {}
@@ -495,55 +491,33 @@ class Rohit:
             unset = {f'cooldowns.{k}': "" for k in expired_keys}
             try:
                 await self.shortener_cooldowns.update_one(
-                    {'_id': int(user_id)},
-                    {'$unset': unset}
+                    {'_id': int(user_id)}, {'$unset': unset}
                 )
             except Exception:
                 pass
         return active
 
-    async def next_shortener_unlock_seconds(self, user_id: int,
-                                            total_providers: int) -> int:
-        """
-        Compute how many seconds until this user's next shortener slot
-        becomes usable. Considers BOTH per-slot 24h cooldowns AND the
-        00:00 IST daily reset (which wipes `current_idx`, allowing slots
-        that are no longer on cooldown to be served again).
-
-        Always returns at least 1.
-        """
+    async def next_shortener_unlock_seconds(self, user_id: int, total_providers: int) -> int:
         cooldowns = await self.get_shortener_cooldowns(user_id)
         if total_providers <= 0:
             return await self.seconds_until_daily_reset() or 1
-
         now = time.time()
-        # Earliest moment some slot in 0..N-1 leaves cooldown.
-        slot_unlocks = [
-            cooldowns[i] for i in range(total_providers) if i in cooldowns
-        ]
+        slot_unlocks = [cooldowns[i] for i in range(total_providers) if i in cooldowns]
         if not slot_unlocks:
-            # No active cooldowns at all — exhaustion must be due to
-            # current_idx already past N. Daily reset is what unblocks.
             return max(1, await self.seconds_until_daily_reset())
-
         earliest_slot_unlock = min(slot_unlocks) - now
-        # The user also needs `current_idx` reset (which only happens at
-        # the daily IST midnight) before a freshly-uncooled slot can be
-        # served, so the true wait is the LATER of the two.
         daily_reset = await self.seconds_until_daily_reset()
         return max(1, int(max(earliest_slot_unlock, daily_reset)))
 
-    # ================================================================
+    # ═══════════════════════════════════════════════════════════
     # DAILY COUNTERS for /count  (auto-reset at 00:00 IST)
-    # ================================================================
-
+    # ═══════════════════════════════════════════════════════════
     async def _today_stats_doc(self):
         today = _today_ist()
         doc = await self.daily_stats.find_one({'_id': today})
         return doc or {'_id': today}
 
     async def increment_shortener_success(self, slot_idx: int):
-        """Increment the per-slot success counter for today."""
         today = _today_ist()
         await self.daily_stats.update_one(
             {'_id': today},
@@ -551,12 +525,16 @@ class Rohit:
             upsert=True
         )
 
+    async def record_new_channel_join(self, user_id: int):
+        """Called when a user successfully passes force-sub check for the first time today."""
+        today = _today_ist()
+        await self.daily_stats.update_one(
+            {'_id': today},
+            {'$addToSet': {'channel_joined_today': int(user_id)}},
+            upsert=True
+        )
+
     async def record_premium_access(self, user_id: int, link_payload: str) -> bool:
-        """
-        Record that a premium user accessed a link today.
-        Returns True if this is a NEW link for this user today (counted),
-        False if they've already accessed this exact link today (not counted).
-        """
         today = _today_ist()
         try:
             await self.premium_access.insert_one({
@@ -578,7 +556,6 @@ class Rohit:
             return False
 
     async def get_today_stats(self) -> dict:
-        """Return the raw daily stats doc for today (zero-filled if missing)."""
         today = _today_ist()
         doc = await self.daily_stats.find_one({'_id': today})
         if not doc:
@@ -588,54 +565,33 @@ class Rohit:
                 'shortener_success': {},
                 'premium_users': [],
                 'premium_unique_link_count': 0,
+                'bypass_attempts': 0,
+                'channel_joined_today': [],
             }
         doc.setdefault('total_success', 0)
         doc.setdefault('shortener_success', {})
         doc.setdefault('premium_users', [])
         doc.setdefault('premium_unique_link_count', 0)
+        doc.setdefault('bypass_attempts', 0)
+        doc.setdefault('channel_joined_today', [])
         return doc
 
     async def reset_all_daily_stats(self):
-        """Wipe every daily counter and per-user progress so the day starts fresh."""
         await self.sex_data.update_many({}, {'$set': {'verify_count': 0}})
         await self.daily_stats.delete_many({})
         await self.premium_access.delete_many({})
         await self.shortener_progress.delete_many({})
-        # Pending short-link records also reset — yesterday's unfinished links
-        # don't carry over since the user starts at slot #1 again today.
-        # NOTE: bypass_bans and shortener_cooldowns are deliberately NOT
-        # wiped: bans must persist across days, and the per-user 24h
-        # per-shortener cooldowns are also explicitly long-lived (only
-        # the /count daily counters reset at 00:00 IST).
         await self.pending_shortener.delete_many({})
 
-    # ================================================================
+    # ═══════════════════════════════════════════════════════════
     # BYPASS PROTECTION
-    #
-    # When a short link is sent we record:
-    #   {_id: "{user_id}:{base64}",
-    #    user_id, base64, chat_id, message_id,
-    #    sent_at: unix_ts,           # when the link was sent
-    #    expired: bool,              # true after a bypass detection
-    #   }
-    # The yu3elk callback then either:
-    #   - completes legitimately (delta >= BYPASS_PROTECTION_SECONDS) → delete
-    #   - is too fast → mark expired, register a strike, escalate the ban
-    #
-    # Escalation table (per user, cumulative across days):
-    #   strike 1 → warn only
-    #   strike 2 → ban 12 hours
-    #   strike 3 → ban 24 hours
-    #   strike 4 → permanent ban
-    # ================================================================
-
+    # ═══════════════════════════════════════════════════════════
     @staticmethod
     def _pending_id(user_id: int, base64: str) -> str:
         return f"{int(user_id)}:{str(base64)}"
 
     async def create_pending_shortener(self, user_id: int, base64: str,
                                        chat_id: int, message_id: int) -> float:
-        """Record that a short link was just served. Returns the sent_at ts."""
         sent_at = time.time()
         await self.pending_shortener.update_one(
             {'_id': self._pending_id(user_id, base64)},
@@ -657,7 +613,6 @@ class Rohit:
         )
 
     async def find_active_pendings_for_user(self, user_id: int) -> list:
-        """All non-expired pending short-link records for a user (for cleanup)."""
         cursor = self.pending_shortener.find(
             {'user_id': int(user_id), 'expired': {'$ne': True}}
         )
@@ -675,16 +630,6 @@ class Rohit:
         )
 
     async def register_bypass_attempt(self, user_id: int) -> dict:
-        """
-        Record a bypass attempt and apply the next escalation step.
-        Returns a dict:
-            {
-              'strikes': int,
-              'action': 'warn'|'ban_12h'|'ban_24h'|'permanent',
-              'banned_until': float|None,
-              'permanent': bool,
-            }
-        """
         now = time.time()
         existing = await self.bypass_bans.find_one({'_id': int(user_id)}) or {}
         new_strikes = int(existing.get('strikes', 0)) + 1
@@ -706,7 +651,6 @@ class Rohit:
             banned_until = None
             permanent = True
 
-        # Track today's bypass-attempt counter for /count
         today = _today_ist()
         await self.daily_stats.update_one(
             {'_id': today},
@@ -734,10 +678,6 @@ class Rohit:
         }
 
     async def get_bypass_ban(self, user_id: int):
-        """
-        Return ban info dict if the user is currently banned via bypass
-        protection (timed or permanent), else None.
-        """
         doc = await self.bypass_bans.find_one({'_id': int(user_id)})
         if not doc:
             return None
@@ -749,7 +689,6 @@ class Rohit:
         return None
 
     async def count_active_bypass_bans(self) -> dict:
-        """Counts of currently-active bypass bans (timed + permanent)."""
         now = time.time()
         timed = await self.bypass_bans.count_documents({
             'permanent': {'$ne': True},
@@ -758,6 +697,305 @@ class Rohit:
         permanent = await self.bypass_bans.count_documents({'permanent': True})
         return {'timed': int(timed), 'permanent': int(permanent),
                 'total': int(timed) + int(permanent)}
+
+    # ═══════════════════════════════════════════════════════════
+    # REFERRAL SYSTEM
+    # ═══════════════════════════════════════════════════════════
+
+    async def get_or_create_invite_code(self, user_id: int) -> str:
+        """Return the user's unique invite code (creates one if it doesn't exist)."""
+        doc = await self.referrals.find_one({'_id': int(user_id)})
+        if doc and doc.get('invite_code'):
+            return doc['invite_code']
+        code = f"ref{int(user_id)}"
+        await self.referrals.update_one(
+            {'_id': int(user_id)},
+            {'$set': {
+                'invite_code': code,
+                'all_time_invited': [],
+                'monthly': {},
+                'rewards_given': {},
+            }},
+            upsert=True
+        )
+        return code
+
+    async def get_referrer_of(self, invitee_id: int):
+        """Return the referrer's user_id for an invitee, or None."""
+        doc = await self.referral_joins.find_one({'_id': int(invitee_id)})
+        return doc.get('referrer_id') if doc else None
+
+    async def record_referral_join(self, invitee_id: int, referrer_id: int) -> bool:
+        """
+        Record that invitee_id joined through referrer_id's invite link.
+        Returns True if this is a new unique join (not seen before for this referrer),
+        False if already recorded (prevents re-counting leave-and-rejoin).
+        """
+        # Check if this invitee was already counted for this referrer
+        existing = await self.referral_joins.find_one({'_id': int(invitee_id)})
+        if existing:
+            return False  # already recorded — don't double-count
+
+        now = time.time()
+        month = _current_month_ist()
+
+        # Record in referral_joins (so we never re-count this invitee)
+        await self.referral_joins.insert_one({
+            '_id': int(invitee_id),
+            'referrer_id': int(referrer_id),
+            'joined_at': now,
+            'validated': False,
+            'plan_bought': False,
+        })
+
+        # Update referrer's referral doc — both fields in a SINGLE $addToSet to avoid
+        # Python dict key collision (duplicate '$addToSet' keys would silently drop one).
+        await self.referrals.update_one(
+            {'_id': int(referrer_id)},
+            {
+                '$addToSet': {
+                    'all_time_invited': int(invitee_id),
+                    f'monthly.{month}.invited': int(invitee_id),
+                },
+            },
+            upsert=True
+        )
+        return True
+
+    async def validate_referral(self, invitee_id: int) -> int:
+        """
+        Mark invitee as validated (completed short link / bought premium).
+        Returns referrer_id if there is one and this is a new validation, else -1.
+        """
+        doc = await self.referral_joins.find_one({'_id': int(invitee_id)})
+        if not doc:
+            return -1
+        if doc.get('validated'):
+            return -1  # already validated before
+        referrer_id = doc.get('referrer_id')
+        if not referrer_id:
+            return -1
+
+        month = _current_month_ist()
+        await self.referral_joins.update_one(
+            {'_id': int(invitee_id)},
+            {'$set': {'validated': True}}
+        )
+        await self.referrals.update_one(
+            {'_id': int(referrer_id)},
+            {'$addToSet': {f'monthly.{month}.validated': int(invitee_id)}},
+            upsert=True
+        )
+        return int(referrer_id)
+
+    async def mark_referral_plan_bought(self, invitee_id: int) -> int:
+        """Mark that the invitee bought a plan (also counts as validated). Returns referrer_id."""
+        doc = await self.referral_joins.find_one({'_id': int(invitee_id)})
+        if not doc:
+            return -1
+        referrer_id = doc.get('referrer_id')
+        if not referrer_id:
+            return -1
+        await self.referral_joins.update_one(
+            {'_id': int(invitee_id)},
+            {'$set': {'plan_bought': True}}
+        )
+        # If not yet validated, validate now
+        if not doc.get('validated'):
+            return await self.validate_referral(invitee_id)
+        return int(referrer_id)
+
+    async def get_referral_stats(self, user_id: int) -> dict:
+        """
+        Return referral stats for user:
+        {
+          invite_code, invite_link,
+          month_invited, month_validated,
+          total_all_time,
+          rewards_given_this_month: [3, 10, 40],
+        }
+        """
+        code = await self.get_or_create_invite_code(user_id)
+        doc = await self.referrals.find_one({'_id': int(user_id)}) or {}
+        month = _current_month_ist()
+        monthly = doc.get('monthly', {}).get(month, {})
+        month_invited = len(monthly.get('invited', []))
+        month_validated = len(monthly.get('validated', []))
+        total_all_time = len(doc.get('all_time_invited', []))
+        rewards_this_month = doc.get('rewards_given', {}).get(month, [])
+        return {
+            'invite_code': code,
+            'month_invited': month_invited,
+            'month_validated': month_validated,
+            'total_all_time': total_all_time,
+            'rewards_given_this_month': rewards_this_month,
+        }
+
+    async def check_and_get_pending_reward(self, referrer_id: int) -> tuple:
+        """
+        Check if referrer qualifies for any new reward this month.
+        Returns (days_reward: int, label: str) or (0, "") if no new reward.
+        """
+        from config import REFERRAL_MILESTONES
+        doc = await self.referrals.find_one({'_id': int(referrer_id)}) or {}
+        month = _current_month_ist()
+        monthly = doc.get('monthly', {}).get(month, {})
+        month_validated = len(monthly.get('validated', []))
+        rewards_given = doc.get('rewards_given', {}).get(month, [])
+
+        best_days = 0
+        best_label = ""
+        best_milestone = 0
+        for (min_inv, days, label) in sorted(REFERRAL_MILESTONES, key=lambda x: x[0], reverse=True):
+            if month_validated >= min_inv and min_inv not in rewards_given:
+                best_days = days
+                best_label = label
+                best_milestone = min_inv
+                break
+
+        if best_days > 0:
+            # Mark reward as given
+            await self.referrals.update_one(
+                {'_id': int(referrer_id)},
+                {'$addToSet': {f'rewards_given.{month}': best_milestone}},
+                upsert=True
+            )
+            return (best_days, best_label)
+        return (0, "")
+
+    async def reset_monthly_referral_stats(self):
+        """
+        Called on the 1st of each month. Resets monthly invite/validated counts
+        but keeps all_time_invited intact (to prevent double-counting).
+        Also resets monthly rewards_given so the new month's milestones are fresh.
+        Does NOT delete referral_joins records — those are permanent de-dup records.
+        """
+        await self.referrals.update_many({}, {'$set': {'monthly': {}, 'rewards_given': {}}})
+
+    # ═══════════════════════════════════════════════════════════
+    # PAYMENT REQUESTS
+    # ═══════════════════════════════════════════════════════════
+
+    async def create_payment_request(self, user_id: int, plan_key: str,
+                                     plan_type: str, days: int, amount: int) -> dict:
+        """Create or replace a pending payment request for a user."""
+        now = time.time()
+        doc = {
+            '_id': int(user_id),
+            'plan_key': plan_key,
+            'plan_type': plan_type,
+            'days': days,
+            'amount': amount,
+            'status': 'pending',
+            'requested_at': now,
+            'admin_msg_ids': [],
+        }
+        await self.payment_requests.update_one(
+            {'_id': int(user_id)},
+            {'$set': doc},
+            upsert=True
+        )
+        return doc
+
+    async def get_payment_request(self, user_id: int):
+        return await self.payment_requests.find_one({'_id': int(user_id)})
+
+    async def update_payment_request_status(self, user_id: int, status: str,
+                                            approved_by: int = None):
+        update = {'$set': {'status': status, 'resolved_at': time.time()}}
+        if approved_by:
+            update['$set']['approved_by'] = approved_by
+        await self.payment_requests.update_one({'_id': int(user_id)}, update)
+
+    async def add_admin_msg_to_payment(self, user_id: int, admin_id: int, msg_id: int):
+        await self.payment_requests.update_one(
+            {'_id': int(user_id)},
+            {'$push': {'admin_msg_ids': [int(admin_id), int(msg_id)]}}
+        )
+
+    async def delete_payment_request(self, user_id: int):
+        await self.payment_requests.delete_one({'_id': int(user_id)})
+
+    # ═══════════════════════════════════════════════════════════
+    # INVITE LINK MODE & CHANNEL SETTINGS
+    # ═══════════════════════════════════════════════════════════
+
+    async def set_invite_channel(self, channel_id: int):
+        """Set which channel the bot generates per-user invite links for."""
+        await self.invite_channel_settings.update_one(
+            {'_id': 'settings'},
+            {'$set': {'channel_id': int(channel_id)}},
+            upsert=True
+        )
+
+    async def get_invite_channel(self):
+        """Return the configured invite channel ID, or None."""
+        doc = await self.invite_channel_settings.find_one({'_id': 'settings'})
+        return doc.get('channel_id') if doc else None
+
+    async def set_invite_link_mode(self, mode: str):
+        """
+        Set invite link generation mode:
+          'bot'     — classic bot deep-link  (t.me/bot?start=ref<uid>)
+          'channel' — unique per-user channel invite link
+        """
+        if mode not in ('bot', 'channel'):
+            mode = 'bot'
+        await self.invite_channel_settings.update_one(
+            {'_id': 'settings'},
+            {'$set': {'mode': mode}},
+            upsert=True
+        )
+
+    async def get_invite_link_mode(self) -> str:
+        """Return 'bot' (default) or 'channel'."""
+        doc = await self.invite_channel_settings.find_one({'_id': 'settings'})
+        return (doc.get('mode') or 'bot') if doc else 'bot'
+
+    async def get_or_create_channel_invite(self, user_id: int, channel_id: int, client) -> str:
+        """
+        Return the saved channel invite link for this user, or create a new one.
+        The invite link is permanent, has no member limit, and is named 'ref_<user_id>'
+        so admins can visually identify it in the channel invite-links panel.
+        REQUIRES: bot must be an admin in that channel with 'Invite Users' permission.
+        """
+        doc = await self.user_channel_invites.find_one({'_id': int(user_id)})
+        if doc and doc.get('invite_link') and doc.get('channel_id') == int(channel_id):
+            return doc['invite_link']
+
+        # Create a fresh permanent invite link named after this user
+        invite = await client.create_chat_invite_link(
+            chat_id=int(channel_id),
+            name=f"ref_{user_id}",
+        )
+        link = invite.invite_link
+
+        await self.user_channel_invites.update_one(
+            {'_id': int(user_id)},
+            {'$set': {
+                'channel_id': int(channel_id),
+                'invite_link': link,
+                'created_at': time.time(),
+                'joined_users': [],
+            }},
+            upsert=True
+        )
+        return link
+
+    async def get_invite_link_owner(self, invite_link: str):
+        """Look up which user's referral this channel invite link belongs to."""
+        doc = await self.user_channel_invites.find_one({'invite_link': invite_link})
+        return doc.get('_id') if doc else None
+
+    async def get_invite_link_stats(self, user_id: int) -> dict:
+        """Return stats for a user's channel invite link."""
+        doc = await self.user_channel_invites.find_one({'_id': int(user_id)})
+        if not doc:
+            return {'invite_link': None, 'joined_count': 0}
+        return {
+            'invite_link': doc.get('invite_link'),
+            'joined_count': len(doc.get('joined_users', [])),
+        }
 
 
 db = Rohit(DB_URI, DB_NAME)
