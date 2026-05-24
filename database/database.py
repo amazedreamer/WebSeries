@@ -165,6 +165,24 @@ class Rohit:
         await self.banned_user_data.delete_one({'_id': user_id})
         await self.bypass_bans.delete_one({'_id': user_id})
 
+    async def get_all_bypass_bans(self) -> list:
+        """Return all active bypass-protection bans (permanent + non-expired timed bans)."""
+        now = time.time()
+        docs = await self.bypass_bans.find({
+            '$or': [
+                {'permanent': True},
+                {'banned_until': {'$gt': now}}
+            ]
+        }).to_list(length=None)
+        return docs
+
+    async def is_any_banned(self, user_id: int) -> bool:
+        """Return True if the user is in EITHER the manual ban list OR an active bypass ban."""
+        if await self.ban_user_exist(user_id):
+            return True
+        bypass = await self.get_bypass_ban(user_id)
+        return bypass is not None
+
     # ═══════════════════════════════════════════════════════════
     # AUTO DELETE TIMER SETTINGS
     # ═══════════════════════════════════════════════════════════
