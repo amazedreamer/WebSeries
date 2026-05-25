@@ -177,9 +177,9 @@ USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇ
 # ==========================(BUY PREMIUM)====================#
 
 OWNER_TAG = os.environ.get("OWNER_TAG", "Ebadmindmbot")
-UPI_ID = os.environ.get("UPI_ID", "alpha.wolf@nsdl")
+UPI_ID = os.environ.get("UPI_ID", "BHARATPE.8R0Z0S8K2K37074@fbpe")
 UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "VIKAS MEENA")
-QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/ZR2x7YSJ/photo-2026-01-03-23-54-09.jpg")
+QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/60Dm8rvq/paymentqrcode.jpg")
 SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/Ebadmindmbot")
 # --------------------------------------------
 # Time and its price
