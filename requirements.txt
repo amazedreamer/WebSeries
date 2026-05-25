@@ -20,6 +20,4 @@ shortzy
 aiofiles
 asyncio
 pycryptodome
-# --- For QR Code Generation (buy premium flow) --- #
-qrcode[pil]
 Pillow
