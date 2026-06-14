@@ -75,8 +75,8 @@ SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "cpmshort.com")
 SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "0830a2118d5a130ea4d756b07d984252c1adc26b")
 
 # Shortener 5
-SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "nowshort.com")
-SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "2778c1f0ee5be3c70fa8c84f026d1794a57fcf2b")
+SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "caslinks.com")
+SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "fa3bc3a503135dd51ae90cd8373b15890108a720")
 
 # Shortener 6
 SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "arolinks.com")
