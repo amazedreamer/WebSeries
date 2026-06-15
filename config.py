@@ -28,27 +28,27 @@ def small_caps(text):
 # rohit_1888 on Tg
 # --------------------------------------------
 # Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8527937367:AAEudErU2zDG4gmtd7_bStETKKO4MxtAD0Y")
-APP_ID = int(os.environ.get("APP_ID", "27570787"))  # Your API ID from my.telegram.org
-API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39")  # Your API Hash from my.telegram.org
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8620908958:AAFgsRn3urX1jOWLB2PLMOEFEHF0tBOxsag")
+APP_ID = int(os.environ.get("APP_ID", "30279772"))  # Your API ID from my.telegram.org
+API_HASH = os.environ.get("API_HASH", "39170e11beedd62bb1534a55bfc53ea2")  # Your API Hash from my.telegram.org
 # --------------------------------------------
 
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003732812304"))  # Your db channel Id
-OWNER = os.environ.get("OWNER", "sakxxii")  # Owner username without @
-OWNER_ID = int(os.environ.get("OWNER_ID", "8584220782"))  # Owner id
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1004349829412"))  # Your db channel Id
+OWNER = os.environ.get("OWNER", "deIetedacunt")  # Owner username without @
+OWNER_ID = int(os.environ.get("OWNER_ID", "8799148821"))  # Owner id
 # --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
 # --------------------------------------------
-DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://Test:aloksingh@cluster0.iomykdc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-DB_NAME = os.environ.get("DATABASE_NAME", "NewUpdate")
+DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://urvashiix:dThGnaimQESSvwFT@urvashiix.evuqrai.mongodb.net/?appName=urvashiix")
+DB_NAME = os.environ.get("DATABASE_NAME", "TheToxicMeme")
 # --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "300"))  # 0 means no expiry
-BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/Ebadmindmbot")
+BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/ToxicXAdminRoBot")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # --------------------------------------------
-START_PIC = os.environ.get("START_PIC", "https://api.aniwallpaper.workers.dev/random?type=cute")
-FORCE_PIC = os.environ.get("FORCE_PIC", "https://api.aniwallpaper.workers.dev/i/a77d7c")
+START_PIC = os.environ.get("START_PIC", "https://i.ibb.co/yn8JySKM/Gemini-Generated-Image-cxcl4hcxcl4hcxcl.png")
+FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.ibb.co/TD4nhdzR/Gemini-Generated-Image-qaxp7vqaxp7vqaxp.png")
 
 # --------------------------------------------
 # =============================================
@@ -59,28 +59,28 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://api.aniwallpaper.workers.dev/i/
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "get2short.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "20a4eff7f94bf5fb5d83e98eeab5616f868bb4dc")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "earnlinks.in")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "085494c342b3f697da512445170b89464c3318af")
 
 # Shortener 2
-SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "short4cash.com")
-SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "2cab1fb93703d63d4b32447337f7f3c1d8f4d7f0")
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "liteshort.com")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
 
 # Shortener 3
-SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "babylinks.in")
-SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "27cd9c334bdc5e40c4c2af6a5201867836ef49ac")
+SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "urllinkshort.i")
+SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "f06d773b5855747d387da0b37c28c963a142d808")
 
 # Shortener 4
-SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "cpmshort.com")
-SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "0830a2118d5a130ea4d756b07d984252c1adc26b")
+SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "papajiurl.com")
+SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "0355de6df10e776db69f63f47931ff0d87a0cd50")
 
 # Shortener 5
-SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "caslinks.com")
-SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "fa3bc3a503135dd51ae90cd8373b15890108a720")
+SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "vipshort.in")
+SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "272e34fbff65f0e28ff5eb4c5ba7465bf3b55ad4")
 
 # Shortener 6
-SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "arolinks.com")
-SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "3c41df8026a8c7adff4a7f801b47da074ff992cb")
+SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "seturl.in")
+SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "03d19039c73ce82324bc5ddb62cddb6b67c20391")
 
 # Build list of active shorteners (those where both URL and API are non-empty)
 SHORTLINK_PROVIDERS = []
@@ -115,24 +115,27 @@ SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECO
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
 
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheEroticBhabhiOfficial/8")
-SHORT_MSG = "<b><blockquote>⌯ ʜᴇʀᴇ ɪꜱ ʏᴏᴜʀ ʟɪɴᴋ, ɪꜰ ʏᴏᴜ ᴀʀᴇ ɴᴇᴡ ʜᴇʀᴇ ᴛʜᴇɴ ʏᴏᴜ ᴍᴜꜱᴛ ᴡᴀᴛᴄʜ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴄʟɪᴄᴋɪɴɢ ᴏɴ ᴅᴏᴡɴʟᴏᴀᴅ...</blockquote></b>"
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/5")
+SHORT_MSG = (
+    f"<blockquote>✨ <b>{small_caps('ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ')}</b></blockquote>\n\n"
+    f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}"
+)
 
-SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/LD7Nsqm0/Ani-Wallpaper-dfc7d4-hd-Blaze-update-Z.jpg")
+SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/8ggPBWDS/Gemini-Generated-Image-6ow8rn6ow8rn6ow8.png")
 # --------------------------------------------
 
 # --------------------------------------------
-HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheEroticBhabhiOfficial\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheEroticBhabhiOfficial>TheEroticBhabhi</a></blockquote></b>"
+HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheToxicMeme\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheEroticBhabhiOfficial</blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheToxicMeme</blockquote>\n\n"
     f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/Ebadmindmbot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
 # --------------------------------------------
 START_MSG = (
     f"<blockquote>👤 <b>{small_caps('ᴡᴇʟᴄᴏᴍᴇ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheEroticBhabhiOfficial</blockquote>\n"
+    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheToxicMeme</blockquote>\n"
     f"<blockquote>{small_caps('ᴜsᴇ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ.')}</blockquote>"
 )
 
@@ -166,21 +169,21 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇғᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @TheEroticBhabhiOfficial</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @TheToxicMeme</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
-DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'True'
+DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
 # --------------------------------------------
 BOT_STATS_TEXT = f"<blockquote>⏳ <b>{small_caps('sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ')}</b>\n{{uptime}}</blockquote>"
 USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ')}</b>\n{small_caps('ᴀᴅᴍɪɴ ᴘʀɪᴠɪʟᴇɢᴇs ʀᴇǫᴜɪʀᴇᴅ.')}</blockquote>"
 
 # ==========================(BUY PREMIUM)====================#
 
-OWNER_TAG = os.environ.get("OWNER_TAG", "Ebadmindmbot")
+OWNER_TAG = os.environ.get("OWNER_TAG", "ToxicXAdminRoBot")
 UPI_ID = os.environ.get("UPI_ID", "BHARATPE.8R0Z0S8K2K37074@fbpe")
 UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "VIKAS MEENA")
 QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/60Dm8rvq/paymentqrcode.jpg")
-SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/Ebadmindmbot")
+SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/ToxicXAdminRoBot")
 # --------------------------------------------
 # Time and its price
 # 10 Days
