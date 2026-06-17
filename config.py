@@ -115,7 +115,7 @@ SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECO
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
 
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/5")
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/7")
 SHORT_MSG = (
     f"<blockquote>✨ <b>{small_caps('ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}"
