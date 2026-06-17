@@ -60,7 +60,7 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.ibb.co/TD4nhdzR/Gemini-Genera
 
 # Shortener 1 (primary / existing)
 SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "short4cash.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "2cab1fb93703d63d4b32447337f7f3c1d8f4d7f0")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "c8cf524e5c3a2e123bfbcfdae953935459de7561")
 
 # Shortener 2
 SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "liteshort.com")
