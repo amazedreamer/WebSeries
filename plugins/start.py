@@ -525,7 +525,7 @@ async def start_command(client: Client, message: Message):
                 keyboard = InlineKeyboardMarkup(
                     [[InlineKeyboardButton("ɢᴇᴛ ꜰɪʟᴇ ᴀɢᴀɪɴ!", url=reload_url)]]
                 ) if reload_url else None
-                await notification_msg.edit("🕊️", reply_markup=keyboard)
+                await notification_msg.edit("📺", reply_markup=keyboard)
             except Exception as e:
                 print(f"Error updating notification: {e}")
 
@@ -606,7 +606,7 @@ chat_data_cache = {}
 
 
 async def not_joined(client: Client, message: Message, start_param: str = ""):
-    temp = await message.reply("<b>(●'◡'●)</b>")
+    temp = await message.reply("👋🏻")
     user_id = message.from_user.id
     buttons = []
     count = 0
@@ -661,7 +661,7 @@ async def not_joined(client: Client, message: Message, start_param: str = ""):
             if reload_param:
                 buttons.append([
                     InlineKeyboardButton(
-                        text='♻️ ᴛʀʏ ᴀɢᴀɪɴ',
+                        text='• ᴛʀʏ ᴀɢᴀɪɴ •',
                         url=f"https://t.me/{client.username}?start={reload_param}"
                     )
                 ])
