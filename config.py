@@ -59,24 +59,24 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.ibb.co/TD4nhdzR/Gemini-Genera
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "short4cash.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "c8cf524e5c3a2e123bfbcfdae953935459de7561")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "papajiurl.com")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "0355de6df10e776db69f63f47931ff0d87a0cd50")
 
 # Shortener 2
-SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "liteshort.com")
-SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "urllinkshort.in")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "f06d773b5855747d387da0b37c28c963a142d808")
 
 # Shortener 3
-SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "urllinkshort.i")
-SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "f06d773b5855747d387da0b37c28c963a142d808")
+SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "liteshort.com")
+SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
 
 # Shortener 4
-SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "papajiurl.com")
-SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "0355de6df10e776db69f63f47931ff0d87a0cd50")
+SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "vipshort.in")
+SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "272e34fbff65f0e28ff5eb4c5ba7465bf3b55ad4")
 
 # Shortener 5
-SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "vipshort.in")
-SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "272e34fbff65f0e28ff5eb4c5ba7465bf3b55ad4")
+SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "short4cash.com")
+SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "c8cf524e5c3a2e123bfbcfdae953935459de7561")
 
 # Shortener 6
 SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "seturl.in")
