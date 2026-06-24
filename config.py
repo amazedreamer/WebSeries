@@ -180,10 +180,10 @@ USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇ
 # ==========================(BUY PREMIUM)====================#
 
 OWNER_TAG = os.environ.get("OWNER_TAG", "SATYAM_SELLER")
-UPI_ID = os.environ.get("UPI_ID", "technogamerzs151@oksbi")
-UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "Sultana")
-QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/rKzgNX5r/photo-2026-06-24-11-10-49.jpg")
-SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/SATYAM_SELLER")
+UPI_ID = os.environ.get("UPI_ID", "jadhavbhargav@fam")
+UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "Bhargav Jadhav")
+QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/qFgysGrc/photo-2026-06-24-13-47-55.jpg")
+SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/NotYourDemonOp")
 # --------------------------------------------
 # Time and its price
 # 10 Days
