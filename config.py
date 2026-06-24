@@ -195,11 +195,14 @@ PRICE3 = os.environ.get("PRICE3", "199 rs")
 # 6 Month
 PRICE4 = os.environ.get("PRICE4", "299")
 
+PRICE5 = os.environ.get("PRICE4", "999")
+
 # Super Premium Prices
 PRICE_SP_1 = os.environ.get("PRICE_SP_1", "20 rs")
 PRICE_SP_2 = os.environ.get("PRICE_SP_2", "149 rs")
 PRICE_SP_3 = os.environ.get("PRICE_SP_3", "299 rs")
 PRICE_SP_4 = os.environ.get("PRICE_SP_4", "499 rs")
+PRICE_SP_5 = os.environ.get("PRICE_SP_4", "999 rs")
 
 # Plan definitions (used by buy-premium flow to generate QR + buttons)
 # key format: np_<id> for normal, sp_<id> for super
