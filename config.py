@@ -210,10 +210,10 @@ NORMAL_PLANS = [
     {"key": "np_3", "label": "𝟶2 ᴍᴏɴᴛʜs",  "days": 60, "price_str": PRICE4},
 ]
 SUPER_PLANS = [
-    {"key": "sp_0", "label": "𝟶𝟷 ᴅᴀʏ",   "days": 1,  "price_str": PRICE_SP_2},
-    {"key": "sp_1", "label": "15 ᴅᴀʏs",  "days": 15,  "price_str": PRICE_SP_3},
-    {"key": "sp_2", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30, "price_str": PRICE_SP_4},
-    {"key": "sp_3", "label": "𝟶2 ᴍᴏɴᴛʜs",    "days": 60, "price_str": PRICE_SP_5},
+    {"key": "sp_1", "label": "𝟶𝟷 ᴅᴀʏ",   "days": 1,  "price_str": PRICE_SP_2},
+    {"key": "sp_2", "label": "15 ᴅᴀʏs",  "days": 15,  "price_str": PRICE_SP_3},
+    {"key": "sp_3", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30, "price_str": PRICE_SP_4},
+    {"key": "sp_4", "label": "𝟶2 ᴍᴏɴᴛʜs",    "days": 60, "price_str": PRICE_SP_5},
 ]
 
 ALL_PLANS = {p["key"]: p for p in NORMAL_PLANS + SUPER_PLANS}
