@@ -28,23 +28,23 @@ def small_caps(text):
 # rohit_1888 on Tg
 # --------------------------------------------
 # Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8620908958:AAFgsRn3urX1jOWLB2PLMOEFEHF0tBOxsag")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8518449457:AAFUAqJV2g---IYPrTjEDSX209g24E0Y4qc")
 APP_ID = int(os.environ.get("APP_ID", "30279772"))  # Your API ID from my.telegram.org
 API_HASH = os.environ.get("API_HASH", "39170e11beedd62bb1534a55bfc53ea2")  # Your API Hash from my.telegram.org
 # --------------------------------------------
 
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1004349829412"))  # Your db channel Id
-OWNER = os.environ.get("OWNER", "deIetedacunt")  # Owner username without @
-OWNER_ID = int(os.environ.get("OWNER_ID", "8799148821"))  # Owner id
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003957454989"))  # Your db channel Id
+OWNER = os.environ.get("OWNER", "SATYAM_SELLER")  # Owner username without @
+OWNER_ID = int(os.environ.get("OWNER_ID", "7445966907"))  # Owner id
 # --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
 # --------------------------------------------
 DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://urvashiix:dThGnaimQESSvwFT@urvashiix.evuqrai.mongodb.net/?appName=urvashiix")
-DB_NAME = os.environ.get("DATABASE_NAME", "TheToxicMeme")
+DB_NAME = os.environ.get("DATABASE_NAME", "PromoCHBot")
 # --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "300"))  # 0 means no expiry
-BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/ToxicXAdminRoBot")
+BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/SATYAM_SELLER")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # --------------------------------------------
 START_PIC = os.environ.get("START_PIC", "https://i.ibb.co/yn8JySKM/Gemini-Generated-Image-cxcl4hcxcl4hcxcl.png")
@@ -59,28 +59,28 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.ibb.co/TD4nhdzR/Gemini-Genera
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "papajiurl.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "0355de6df10e776db69f63f47931ff0d87a0cd50")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "vplink.in")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "043e0ff560fd252f517f02e3e0b11d399b598eb9")
 
 # Shortener 2
-SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "urllinkshort.in")
-SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "f06d773b5855747d387da0b37c28c963a142d808")
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "")
 
 # Shortener 3
-SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "liteshort.com")
-SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
+SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "")
+SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "")
 
 # Shortener 4
-SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "caslinks.com")
-SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "fa3bc3a503135dd51ae90cd8373b15890108a720")
+SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "")
+SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "")
 
 # Shortener 5
-SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "short4cash.com")
-SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "c8cf524e5c3a2e123bfbcfdae953935459de7561")
+SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "")
+SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "")
 
 # Shortener 6
-SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "seturl.in")
-SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "03d19039c73ce82324bc5ddb62cddb6b67c20391")
+SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "")
+SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "")
 
 # Build list of active shorteners (those where both URL and API are non-empty)
 SHORTLINK_PROVIDERS = []
@@ -115,27 +115,27 @@ SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECO
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
 
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/7")
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/TEAM_EXCLUSIVE_ONLY/3")
 SHORT_MSG = (
     f"<blockquote>✨ <b>{small_caps('ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}"
+    f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}</blockquote>"
 )
 
 SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/8ggPBWDS/Gemini-Generated-Image-6ow8rn6ow8rn6ow8.png")
 # --------------------------------------------
 
 # --------------------------------------------
-HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheToxicMeme\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
+HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @SATYAM_SELLER\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheToxicMeme</blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n\n"
     f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/Ebadmindmbot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
 # --------------------------------------------
 START_MSG = (
     f"<blockquote>👤 <b>{small_caps('ᴡᴇʟᴄᴏᴍᴇ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheToxicMeme</blockquote>\n"
+    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n"
     f"<blockquote>{small_caps('ᴜsᴇ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ.')}</blockquote>"
 )
 
@@ -169,7 +169,7 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇғᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• ʙʏ @TheToxicMeme</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TEAMxGODS</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
@@ -179,45 +179,41 @@ USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇ
 
 # ==========================(BUY PREMIUM)====================#
 
-OWNER_TAG = os.environ.get("OWNER_TAG", "ToxicXAdminRoBot")
-UPI_ID = os.environ.get("UPI_ID", "BHARATPE.8R0Z0S8K2K37074@fbpe")
-UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "VIKAS MEENA")
-QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/60Dm8rvq/paymentqrcode.jpg")
-SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/ToxicXAdminRoBot")
+OWNER_TAG = os.environ.get("OWNER_TAG", "SATYAM_SELLER")
+UPI_ID = os.environ.get("UPI_ID", "technogamerzs151@oksbi")
+UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "Sultana")
+QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/rKzgNX5r/photo-2026-06-24-11-10-49.jpg")
+SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/SATYAM_SELLER")
 # --------------------------------------------
 # Time and its price
 # 10 Days
-PRICE1 = os.environ.get("PRICE1", "60 rs")
+PRICE1 = os.environ.get("PRICE1", "10 rs")
 # 1 Month
-PRICE2 = os.environ.get("PRICE2", "110 rs")
+PRICE2 = os.environ.get("PRICE2", "99 rs")
 # 3 Month
-PRICE3 = os.environ.get("PRICE3", "260 rs")
+PRICE3 = os.environ.get("PRICE3", "199 rs")
 # 6 Month
-PRICE4 = os.environ.get("PRICE4", "500 rs")
-# 1 Year
-PRICE5 = os.environ.get("PRICE5", "900 rs")
+PRICE4 = os.environ.get("PRICE4", "299")
 
 # Super Premium Prices
-PRICE_SP_1 = os.environ.get("PRICE_SP_1", "70 rs")
-PRICE_SP_2 = os.environ.get("PRICE_SP_2", "120 rs")
-PRICE_SP_3 = os.environ.get("PRICE_SP_3", "300 rs")
-PRICE_SP_4 = os.environ.get("PRICE_SP_4", "550 rs")
-PRICE_SP_5 = os.environ.get("PRICE_SP_5", "1000 rs")
+PRICE_SP_1 = os.environ.get("PRICE_SP_1", "20 rs")
+PRICE_SP_2 = os.environ.get("PRICE_SP_2", "149 rs")
+PRICE_SP_3 = os.environ.get("PRICE_SP_3", "299 rs")
+PRICE_SP_4 = os.environ.get("PRICE_SP_4", "499 rs")
 
 # Plan definitions (used by buy-premium flow to generate QR + buttons)
 # key format: np_<id> for normal, sp_<id> for super
 NORMAL_PLANS = [
-    {"key": "np_0", "label": "𝟷𝟶 ᴅᴀʏs",    "days": 10,  "price_str": PRICE1},
-    {"key": "np_1", "label": "𝟶𝟷 ᴍᴏɴᴛʜ",   "days": 30,  "price_str": PRICE2},
-    {"key": "np_2", "label": "𝟶𝟹 ᴍᴏɴᴛʜs",  "days": 90,  "price_str": PRICE3},
-    {"key": "np_3", "label": "𝟶𝟼 ᴍᴏɴᴛʜs",  "days": 180, "price_str": PRICE4},
-    {"key": "np_4", "label": "𝟶𝟷 ʏᴇᴀʀ",    "days": 365, "price_str": PRICE5},
+    {"key": "np_0", "label": "𝟷 ᴅᴀʏ",    "days": 1,  "price_str": PRICE1},
+    {"key": "np_1", "label": "15 ᴅᴀʏs",   "days": 15,  "price_str": PRICE2},
+    {"key": "np_2", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30,  "price_str": PRICE3},
+    {"key": "np_3", "label": "𝟶2 ᴍᴏɴᴛʜs",  "days": 60, "price_str": PRICE4},
 ]
 SUPER_PLANS = [
-    {"key": "sp_0", "label": "𝟶𝟷 ᴍᴏɴᴛʜ",   "days": 130,  "price_str": PRICE_SP_2},
-    {"key": "sp_1", "label": "𝟶𝟹 ᴍᴏɴᴛʜs",  "days": 190,  "price_str": PRICE_SP_3},
-    {"key": "sp_2", "label": "𝟶𝟼 ᴍᴏɴᴛʜs",  "days": 280, "price_str": PRICE_SP_4},
-    {"key": "sp_3", "label": "𝟶𝟷 ʏᴇᴀʀ",    "days": 550, "price_str": PRICE_SP_5},
+    {"key": "sp_0", "label": "𝟶𝟷 ᴅᴀʏ",   "days": 1,  "price_str": PRICE_SP_2},
+    {"key": "sp_1", "label": "15 ᴅᴀʏs",  "days": 15,  "price_str": PRICE_SP_3},
+    {"key": "sp_2", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30, "price_str": PRICE_SP_4},
+    {"key": "sp_3", "label": "𝟶2 ᴍᴏɴᴛʜs",    "days": 60, "price_str": PRICE_SP_5},
 ]
 
 ALL_PLANS = {p["key"]: p for p in NORMAL_PLANS + SUPER_PLANS}
