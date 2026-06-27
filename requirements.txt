@@ -21,3 +21,4 @@ aiofiles
 asyncio
 pycryptodome
 Pillow
+qrcode[pil]
