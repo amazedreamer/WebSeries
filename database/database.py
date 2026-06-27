@@ -79,6 +79,12 @@ class Rohit:
         #            }
         self.referrals = self.database['referrals']
 
+        # ── Paytm auto-payment orders ─────────────────────────────────────────
+        # paytm_orders: { order_id: str (PK), user_id, amount, days,
+        #                 plan_key, plan_type, status: pending/success/expired/cancelled,
+        #                 created_at, txn_id (on success) }
+        self.orders = self.database['paytm_orders']
+
         # referral_joins: { _id: invitee_id,
         #                   referrer_id: int,
         #                   joined_at: ts,
@@ -1014,6 +1020,53 @@ class Rohit:
             'invite_link': doc.get('invite_link'),
             'joined_count': len(doc.get('joined_users', [])),
         }
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Paytm Auto-Payment Order Management
+    # ═══════════════════════════════════════════════════════════════════════
+
+    async def create_order(self, order_id: str, user_id: int, amount: float,
+                           days: int, plan_key: str, plan_type: str):
+        """Create a new pending Paytm order."""
+        doc = {
+            '_id': order_id,
+            'user_id': int(user_id),
+            'amount': float(amount),
+            'days': int(days),
+            'plan_key': plan_key,
+            'plan_type': plan_type,   # 'normal' or 'super'
+            'status': 'pending',
+            'created_at': datetime.utcnow(),
+            'txn_id': None,
+        }
+        try:
+            await self.orders.insert_one(doc)
+        except Exception:
+            pass   # duplicate key on retry — safe to ignore
+
+    async def get_order(self, order_id: str):
+        """Fetch a Paytm order by its order_id."""
+        return await self.orders.find_one({'_id': order_id})
+
+    async def get_pending_order_for_user(self, user_id: int):
+        """Return the most recent pending order for a user, or None."""
+        return await self.orders.find_one(
+            {'user_id': int(user_id), 'status': 'pending'},
+            sort=[('created_at', -1)]
+        )
+
+    async def update_order_status(self, order_id: str, status: str, txn_id: str = None):
+        """Update order status; optionally record the Paytm transaction ID."""
+        update = {'status': status}
+        if txn_id:
+            update['txn_id'] = txn_id
+        await self.orders.update_one({'_id': order_id}, {'$set': update})
+
+    async def is_txn_id_used(self, txn_id: str) -> bool:
+        """Replay-attack protection: check if this Paytm TXN_ID was already honoured."""
+        if not txn_id:
+            return False
+        return bool(await self.orders.find_one({'txn_id': txn_id, 'status': 'success'}))
 
 
 db = Rohit(DB_URI, DB_NAME)
