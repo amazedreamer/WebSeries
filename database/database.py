@@ -1060,7 +1060,30 @@ class Rohit:
         update = {'status': status}
         if txn_id:
             update['txn_id'] = txn_id
+        # Stamp completion time so /id date filter works correctly
+        if status == 'success':
+            update['completed_at'] = datetime.utcnow()
         await self.orders.update_one({'_id': order_id}, {'$set': update})
+
+    async def get_orders_by_date(self, start_utc: datetime, end_utc: datetime) -> list:
+        """
+        Return all successfully paid orders whose completed_at falls in the
+        given UTC range.  Used by the /id <date> admin command.
+        Falls back to created_at if an old order has no completed_at field.
+        """
+        cursor = self.orders.find(
+            {
+                'status': 'success',
+                '$or': [
+                    {'completed_at': {'$gte': start_utc, '$lt': end_utc}},
+                    # fallback for orders created before completed_at was added
+                    {'completed_at': {'$exists': False},
+                     'created_at':   {'$gte': start_utc, '$lt': end_utc}},
+                ],
+            },
+            sort=[('completed_at', 1), ('created_at', 1)],
+        )
+        return await cursor.to_list(length=None)
 
     async def is_txn_id_used(self, txn_id: str) -> bool:
         """Replay-attack protection: check if this Paytm TXN_ID was already honoured."""
