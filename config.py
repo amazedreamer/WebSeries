@@ -34,7 +34,7 @@ API_HASH = os.environ.get("API_HASH", "39170e11beedd62bb1534a55bfc53ea2")  # You
 # --------------------------------------------
 
 CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1004450452379"))  # Your db channel Id
-OWNER = os.environ.get("OWNER", "SATYAM_SELLER")  # Owner username without @
+OWNER = os.environ.get("OWNER", "shrutiix")  # Owner username without @
 OWNER_ID = int(os.environ.get("OWNER_ID", "8714830622"))  # Owner id
 # --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
@@ -44,7 +44,7 @@ DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://urvashiix:dThGnaimQESSvwF
 DB_NAME = os.environ.get("DATABASE_NAME", "PromoCHBot")
 # --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "300"))  # 0 means no expiry
-BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/Ebadmindmbot")
+BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/SATYAM_SELLER")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # --------------------------------------------
 START_PIC = os.environ.get("START_PIC", "https://i.ibb.co/yn8JySKM/Gemini-Generated-Image-cxcl4hcxcl4hcxcl.png")
@@ -115,7 +115,7 @@ SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECO
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
 
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/7")
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/TEAM_EXCLUSIVE_ONLY/3")
 SHORT_MSG = (
     f"<blockquote>✨ <b>{small_caps('ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}</blockquote>"
@@ -125,17 +125,17 @@ SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/8ggPBWDS/Gemin
 # --------------------------------------------
 
 # --------------------------------------------
-HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheToxicMeme\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
+HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @SATYAM_SELLER\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheToxicMeme</blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n\n"
     f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/Ebadmindmbot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
 # --------------------------------------------
 START_MSG = (
     f"<blockquote>👤 <b>{small_caps('ᴡᴇʟᴄᴏᴍᴇ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheToxicMeme</blockquote>\n"
+    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n"
     f"<blockquote>{small_caps('ᴜsᴇ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ.')}</blockquote>"
 )
 
@@ -169,7 +169,7 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇꜰᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TheToxicMeme</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TEAMxGODS</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
@@ -188,10 +188,21 @@ UPI_ID          = os.environ.get("UPI_ID",          "paytmqr6mexnc@ptys")
 UPI_PAYEE_NAME  = os.environ.get("UPI_PAYEE_NAME",  "APPLE GIFT GALLERY")
 PAYTM_MID       = os.environ.get("PAYTM_MID",       "PKNtOC25387320837859")   # Paytm Merchant ID
 
+# ── Auto-Payment Verification (Vercel Proxy → Paytm Merchant API) ──────────
+# The Vercel API wraps Paytm's transaction-status API.
+# URL format: GET PAYMENT_API_URL?mid=<MID>&oid=<order_id>
+# Returns JSON with STATUS, ORDERID, TXNAMOUNT, TXNID, BANKTXNID, TXNDATE.
+PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://pay-api-master.vercel.app/")
+PAYMENT_VERIFY_INTERVAL = int(os.environ.get("PAYMENT_VERIFY_INTERVAL", "120"))  # secs between polls
+PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "20"))   # order expiry
+AMOUNT_TOLERANCE        = float(os.environ.get("AMOUNT_TOLERANCE",      "2"))    # ₹ tolerance
+# Channel where successful payment receipts are logged (defaults to DB channel)
+PAYMENT_LOG_CHANNEL_ID  = int(os.environ.get("PAYMENT_LOG_CHANNEL_ID",  str(CHANNEL_ID)))
+
 # Legacy static QR pic — kept for fallback only; dynamic QR is used by default.
 QR_PIC          = os.environ.get("QR_PIC",          "")
 
-SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/TheToxicMeme")
+SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/NotYourDemonOp")
 # --------------------------------------------
 # Time and its price
 # 10 Days
@@ -260,4 +271,3 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 def LOGGER(name: str) -> logging.Logger:
     return logging.getLogger(name)
-
