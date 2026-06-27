@@ -28,14 +28,14 @@ def small_caps(text):
 # rohit_1888 on Tg
 # --------------------------------------------
 # Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8518449457:AAFUAqJV2g---IYPrTjEDSX209g24E0Y4qc")
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8908606968:AAGtaJWpk-7sS4h59UeHwGV-Ql5HyF5w2JU")
 APP_ID = int(os.environ.get("APP_ID", "30279772"))  # Your API ID from my.telegram.org
 API_HASH = os.environ.get("API_HASH", "39170e11beedd62bb1534a55bfc53ea2")  # Your API Hash from my.telegram.org
 # --------------------------------------------
 
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003957454989"))  # Your db channel Id
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1004450452379"))  # Your db channel Id
 OWNER = os.environ.get("OWNER", "SATYAM_SELLER")  # Owner username without @
-OWNER_ID = int(os.environ.get("OWNER_ID", "7445966907"))  # Owner id
+OWNER_ID = int(os.environ.get("OWNER_ID", "8714830622"))  # Owner id
 # --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
@@ -44,7 +44,7 @@ DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://urvashiix:dThGnaimQESSvwF
 DB_NAME = os.environ.get("DATABASE_NAME", "PromoCHBot")
 # --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "300"))  # 0 means no expiry
-BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/SATYAM_SELLER")
+BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/Ebadmindmbot")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # --------------------------------------------
 START_PIC = os.environ.get("START_PIC", "https://i.ibb.co/yn8JySKM/Gemini-Generated-Image-cxcl4hcxcl4hcxcl.png")
@@ -115,7 +115,7 @@ SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECO
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
 
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/TEAM_EXCLUSIVE_ONLY/3")
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/7")
 SHORT_MSG = (
     f"<blockquote>✨ <b>{small_caps('ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}</blockquote>"
@@ -125,17 +125,17 @@ SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/8ggPBWDS/Gemin
 # --------------------------------------------
 
 # --------------------------------------------
-HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @SATYAM_SELLER\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
+HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheToxicMeme\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheToxicMeme</blockquote>\n\n"
     f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/Ebadmindmbot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
 # --------------------------------------------
 START_MSG = (
     f"<blockquote>👤 <b>{small_caps('ᴡᴇʟᴄᴏᴍᴇ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n"
+    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheToxicMeme</blockquote>\n"
     f"<blockquote>{small_caps('ᴜsᴇ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ.')}</blockquote>"
 )
 
@@ -166,10 +166,10 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /remove_premium :</b> ʀᴇᴍᴏᴠᴇ ᴘʀᴇᴍɪᴜᴍ ꜰʀᴏᴍ ᴀ ᴜꜱᴇʀ
 <b>›› /myplan :</b> ᴄʜᴇᴄᴋ ʏᴏᴜʀ ᴘʀᴇᴍɪᴜᴍ sᴛᴀᴛᴜs
 <b>›› /count :</b> ᴄᴏᴜɴᴛ ᴠᴇʀɪғɪᴄᴀᴛɪᴏɴs
-<b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇғᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
+<b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇꜰᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TEAMxGODS</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TheToxicMeme</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
@@ -180,14 +180,22 @@ USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇ
 # ==========================(BUY PREMIUM)====================#
 
 OWNER_TAG = os.environ.get("OWNER_TAG", "SATYAM_SELLER")
-UPI_ID = os.environ.get("UPI_ID", "jadhavbhargav@fam")
-UPI_PAYEE_NAME = os.environ.get("UPI_PAYEE_NAME", "Bhargav Jadhav")
-QR_PIC = os.environ.get("QR_PIC", "https://i.ibb.co/qFgysGrc/photo-2026-06-24-13-47-55.jpg")
-SCREENSHOT_URL = os.environ.get("SCREENSHOT_URL", f"t.me/NotYourDemonOp")
+
+# ── Paytm UPI Payment Details ──────────────────────────────────────────────
+# Dynamic QR codes are generated per-plan using these details.
+# The QR encodes a UPI deep link with the exact plan amount pre-filled.
+UPI_ID          = os.environ.get("UPI_ID",          "paytmqr6mexnc@ptys")
+UPI_PAYEE_NAME  = os.environ.get("UPI_PAYEE_NAME",  "APPLE GIFT GALLERY")
+PAYTM_MID       = os.environ.get("PAYTM_MID",       "PKNtOC25387320837859")   # Paytm Merchant ID
+
+# Legacy static QR pic — kept for fallback only; dynamic QR is used by default.
+QR_PIC          = os.environ.get("QR_PIC",          "")
+
+SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/TheToxicMeme")
 # --------------------------------------------
 # Time and its price
 # 10 Days
-PRICE1 = os.environ.get("PRICE1", "10 rs")
+PRICE1 = os.environ.get("PRICE1", "1 rs")
 # 1 Month
 PRICE2 = os.environ.get("PRICE2", "99 rs")
 # 3 Month
@@ -198,7 +206,7 @@ PRICE4 = os.environ.get("PRICE4", "299")
 PRICE5 = os.environ.get("PRICE4", "999")
 
 # Super Premium Prices
-PRICE_SP_1 = os.environ.get("PRICE_SP_1", "20 rs")
+PRICE_SP_1 = os.environ.get("PRICE_SP_1", "2 rs")
 PRICE_SP_2 = os.environ.get("PRICE_SP_2", "149 rs")
 PRICE_SP_3 = os.environ.get("PRICE_SP_3", "299 rs")
 PRICE_SP_4 = os.environ.get("PRICE_SP_4", "499 rs")
@@ -252,3 +260,4 @@ logging.getLogger("pyrogram").setLevel(logging.WARNING)
 
 def LOGGER(name: str) -> logging.Logger:
     return logging.getLogger(name)
+
