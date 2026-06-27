@@ -137,16 +137,24 @@ async def verify_payment_once(order_id: str, expected_amount: float) -> Optional
 async def on_payment_success(client, user_id: int, order_id: str,
                               amount: float, days: int, plan_key: str,
                               plan_type: str, plan_label: str,
-                              txn_info: dict, chat_id: int):
+                              txn_info: dict, chat_id: int,
+                              qr_message_id: Optional[int] = None):
     """
     Called once a payment is confirmed.
-    1. Grants the plan (normal or super premium).
-    2. Notifies the user.
-    3. Logs the sale to the admin channel + owner.
+    1. Deletes the QR message (if still present).
+    2. Grants the plan (normal or super premium).
+    3. Notifies the user.
+    4. Logs the sale to the admin channel + owner.
     """
     from database.database import db
     from database.db_premium import add_premium
-    from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+    # 0 ── Delete QR/payment message so user sees clean confirmation ──────────
+    if qr_message_id:
+        try:
+            await client.delete_messages(chat_id=chat_id, message_ids=qr_message_id)
+        except Exception:
+            pass
 
     # 1 ── Activate plan ─────────────────────────────────────────────────────
     expiry = None
@@ -301,6 +309,12 @@ async def _run_auto_verifier(client, user_id: int, order_id: str,
         # ── Normal poll ───────────────────────────────────────────────────────
         result = await verify_payment_once(order_id, amount)
         if result:
+            # Delete QR so the user doesn't see a stale payment screen
+            if qr_message_id:
+                try:
+                    await client.delete_messages(chat_id=chat_id, message_ids=qr_message_id)
+                except Exception:
+                    pass
             await on_payment_success(
                 client, user_id, order_id, amount, days,
                 plan_key, plan_type, plan_label, result, chat_id
