@@ -46,17 +46,34 @@ def make_order_id(user_id: int) -> str:
     return f"ORD-{user_id}-{suffix}"
 
 
-def format_expiry(dt: datetime) -> str:
-    """Convert a datetime to a readable IST expiry string."""
+def format_expiry(dt) -> str:
+    """
+    Convert a datetime (or date string) to a readable IST expiry string.
+    Handles both datetime objects AND strings returned by some db_premium
+    functions (e.g. "2026-07-12 20:16:38").
+    """
     if not dt:
         return "N/A"
+    # Some versions of add_premium / add_super_premium return a plain string
+    if isinstance(dt, str):
+        try:
+            from datetime import datetime as _dt
+            dt = _dt.fromisoformat(dt.replace("Z", "+00:00"))
+        except Exception:
+            # Can't parse — return the raw string trimmed to date+time
+            return str(dt)[:19]
     try:
         from pytz import timezone as _tz
         ist = _tz("Asia/Kolkata")
+        if not getattr(dt, "tzinfo", None):
+            dt = dt.replace(tzinfo=timezone.utc)
         dt_ist = dt.astimezone(ist)
         return dt_ist.strftime("%d %b %Y, %I:%M %p IST")
     except Exception:
-        return dt.strftime("%d %b %Y, %H:%M UTC")
+        try:
+            return str(dt)[:19]
+        except Exception:
+            return "N/A"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -172,7 +189,10 @@ async def on_payment_success(client, user_id: int, order_id: str,
 
     # 3 ── Notify user ────────────────────────────────────────────────────────
     plan_emoji = "🚀" if plan_type == "super" else "💎"
-    expiry_str = format_expiry(expiry) if expiry else "N/A"
+    try:
+        expiry_str = format_expiry(expiry) if expiry else "N/A"
+    except Exception:
+        expiry_str = str(expiry)[:19] if expiry else "N/A"
     user_text = (
         f"<blockquote>{plan_emoji} <b>ᴘʟᴀɴ ᴀᴄᴛɪᴠᴀᴛᴇᴅ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ!</b></blockquote>\n\n"
         f"<blockquote>✅ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ʜᴀs ʙᴇᴇɴ ᴠᴇʀɪꜰɪᴇᴅ ᴀɴᴅ ʏᴏᴜʀ ᴘʟᴀɴ ɪs ɴᴏᴡ ᴀᴄᴛɪᴠᴇ.</blockquote>\n"
