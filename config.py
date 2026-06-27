@@ -197,7 +197,7 @@ PAYMENT_VERIFY_INTERVAL = int(os.environ.get("PAYMENT_VERIFY_INTERVAL", "120")) 
 PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "20"))   # order expiry
 AMOUNT_TOLERANCE        = float(os.environ.get("AMOUNT_TOLERANCE",      "2"))    # ₹ tolerance
 # Channel where successful payment receipts are logged (defaults to DB channel)
-PAYMENT_LOG_CHANNEL_ID  = int(os.environ.get("PAYMENT_LOG_CHANNEL_ID",  str(CHANNEL_ID)))
+PAYMENT_LOG_CHANNEL_ID  = int(os.environ.get("PAYMENT_LOG_CHANNEL_ID",  "-1004450452379"))
 
 # Legacy static QR pic — kept for fallback only; dynamic QR is used by default.
 QR_PIC          = os.environ.get("QR_PIC",          "")
