@@ -8,8 +8,13 @@
 # All rights reserved.
 
 import asyncio
+import io
 import re as _re
+import time
 import urllib.parse
+import qrcode
+import qrcode.constants
+
 from pyrogram import Client, filters
 from bot import Bot
 from config import *
@@ -24,6 +29,47 @@ def parse_price_amount(price_str: str) -> int:
     """Extract numeric rupee amount from a price string like '50 rs' → 50."""
     m = _re.search(r'\d+', str(price_str))
     return int(m.group()) if m else 0
+
+
+# ── Dynamic UPI QR Code Generator ────────────────────────────────────────────
+def _generate_upi_qr(amount: int, user_id: int) -> tuple:
+    """
+    Generate a dynamic UPI QR code for the given amount.
+
+    The QR encodes a UPI deep link:
+      upi://pay?pa=<UPI_ID>&pn=<PAYEE>&am=<AMOUNT>&cu=INR&tn=<REF>
+
+    This works with ALL UPI apps (Paytm, GPay, PhonePe, BHIM, etc.).
+    The amount is pre-filled so the user cannot change it.
+
+    Returns (BytesIO image, ref_id string).
+    """
+    ref_id = f"PMT{user_id}{int(time.time())}"
+    upi_url = (
+        f"upi://pay"
+        f"?pa={UPI_ID}"
+        f"&pn={urllib.parse.quote(UPI_PAYEE_NAME)}"
+        f"&am={amount}"
+        f"&cu=INR"
+        f"&tn={urllib.parse.quote(f'Premium {ref_id}')}"
+    )
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(upi_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    bio = io.BytesIO()
+    bio.name = "paytm_qr.png"
+    img.save(bio, format="PNG")
+    bio.seek(0)
+
+    return bio, ref_id
 
 
 async def _get_referral_invite_link(client: Client, user_id: int) -> str:
@@ -193,7 +239,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             reply_markup=InlineKeyboardMarkup(buttons),
         )
 
-    # ── Buy Premium — Step 3: show payment QR ────────────────────────────────
+    # ── Buy Premium — Step 3: show dynamic Paytm QR for exact plan amount ─────
     elif data.startswith("plan_select_"):
         plan_key = data[len("plan_select_"):]
         plan = _plan_key_to_info(plan_key)
@@ -204,19 +250,30 @@ async def cb_handler(client: Bot, query: CallbackQuery):
         amount = parse_price_amount(plan['price_str'])
         plan_type_str = "sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ" if plan_key.startswith("sp") else "ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ"
 
-        await query.answer("ʟᴏᴀᴅɪɴɢ ᴘᴀʏᴍᴇɴᴛ ᴅᴇᴛᴀɪʟs...")
+        await query.answer("ɢᴇɴᴇʀᴀᴛɪɴɢ ᴘᴀʏᴍᴇɴᴛ ǫʀ...")
+
+        # ── Generate dynamic UPI QR code for this exact plan amount ────────
+        try:
+            qr_bio, ref_id = _generate_upi_qr(amount, query.from_user.id)
+        except Exception as qr_err:
+            print(f"[cbb] QR generation failed: {qr_err}")
+            await query.answer("QR ɢᴇɴᴇʀᴀᴛɪᴏɴ ꜰᴀɪʟᴇᴅ. ᴛʀʏ ᴀɢᴀɪɴ.", show_alert=True)
+            return
 
         caption = (
             f"<blockquote>💳 <b>ᴘᴀʏᴍᴇɴᴛ ᴅᴇᴛᴀɪʟs</b></blockquote>\n\n"
             f"<blockquote>» ᴘʟᴀɴ: <b>{plan_type_str}</b></blockquote>\n"
             f"<blockquote>» ᴅᴜʀᴀᴛɪᴏɴ: <b>{plan['label']}</b></blockquote>\n"
             f"<blockquote>» ᴀᴍᴏᴜɴᴛ: <b>₹{amount}</b></blockquote>\n\n"
-            f"<blockquote>sᴄᴀɴ ᴛʜᴇ ǫʀ ᴄᴏᴅᴇ ᴀʙᴏᴠᴇ ᴡɪᴛʜ ᴀɴʏ ᴜᴘɪ ᴀᴘᴘ ᴛᴏ ᴘᴀʏ ₹{amount}.</blockquote>\n"
-            f"<blockquote>» ᴜᴘɪ ɪᴅ: <code>{UPI_ID}</code> (<b>{UPI_PAYEE_NAME}</b>)</blockquote>\n\n"
-            f"<blockquote expandable>📝 ɪᴍᴘᴏʀᴛᴀɴᴛ ɪɴsᴛʀᴜᴄᴛɪᴏɴs:\n"
-            f"1️⃣ sᴄᴀɴ ᴛʜᴇ ǫʀ ᴄᴏᴅᴇ & ᴄᴏᴍᴘʟᴇᴛᴇ ᴘᴀʏᴍᴇɴᴛ.\n"
+            f"<blockquote>📱 sᴄᴀɴ ᴛʜɪs ᴅʏɴᴀᴍɪᴄ ǫʀ ᴄᴏᴅᴇ ᴡɪᴛʜ ᴀɴʏ ᴜᴘɪ ᴀᴘᴘ.\n"
+            f"ᴛʜᴇ ᴀᴍᴏᴜɴᴛ ₹{amount} ɪs ᴘʀᴇ-ꜰɪʟʟᴇᴅ — ᴅᴏ ɴᴏᴛ ᴄʜᴀɴɢᴇ ɪᴛ.</blockquote>\n"
+            f"<blockquote>» ᴜᴘɪ ɪᴅ: <code>{UPI_ID}</code>\n"
+            f"» ᴘᴀʏᴇᴇ: <b>{UPI_PAYEE_NAME}</b></blockquote>\n\n"
+            f"<blockquote expandable>📝 ɪɴsᴛʀᴜᴄᴛɪᴏɴs:\n"
+            f"1️⃣ sᴄᴀɴ ǫʀ ᴄᴏᴅᴇ & ᴘᴀʏ ᴇxᴀᴄᴛʟʏ ₹{amount}.\n"
             f"2️⃣ ᴄʟɪᴄᴋ <b>ᴘᴀʏᴍᴇɴᴛ ᴅᴏɴᴇ</b> ᴀꜰᴛᴇʀ ᴘᴀʏɪɴɢ.\n"
-            f"3️⃣ ᴏᴜʀ ᴛᴇᴀᴍ ᴡɪʟʟ ᴠᴇʀɪꜰʏ & ᴀᴄᴛɪᴠᴀᴛᴇ ʏᴏᴜʀ ᴘʟᴀɴ ꜱᴏᴏɴ.</blockquote>"
+            f"3️⃣ sᴇɴᴅ ʏᴏᴜʀ <b>ᴜᴘɪ ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ / ᴜᴛʀ</b> ɴᴜᴍʙᴇʀ.\n"
+            f"4️⃣ ᴏᴜʀ ᴛᴇᴀᴍ ᴡɪʟʟ ᴠᴇʀɪꜰʏ & ᴀᴄᴛɪᴠᴀᴛᴇ ʏᴏᴜʀ ᴘʟᴀɴ ꜱᴏᴏɴ.</blockquote>"
         )
 
         try:
@@ -227,7 +284,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
         try:
             sent = await client.send_photo(
                 chat_id=query.message.chat.id,
-                photo=QR_PIC,
+                photo=qr_bio,
                 caption=caption,
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton(f"✅ ᴘᴀʏᴍᴇɴᴛ ᴅᴏɴᴇ", callback_data=f"pmt_done_{plan_key}")],
@@ -245,7 +302,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             print(f"[cbb] plan_select send_photo failed: {e}")
             await query.answer("ᴄᴏᴜʟᴅ ɴᴏᴛ ʟᴏᴀᴅ ᴘᴀʏᴍᴇɴᴛ ɪɴꜰᴏ. ᴛʀʏ ᴀɢᴀɪɴ.", show_alert=True)
 
-    # ── Payment Done — user claims payment was made ────────────────────────────
+    # ── Payment Done — collect UTR then forward to admin ─────────────────────
     elif data.startswith("pmt_done_"):
         plan_key = data[len("pmt_done_"):]
         plan = _plan_key_to_info(plan_key)
@@ -268,6 +325,51 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             )
             return
 
+        await query.answer("ᴘʟᴇᴀsᴇ sᴇɴᴅ ʏᴏᴜʀ ᴜᴛʀ ɴᴜᴍʙᴇʀ...", show_alert=False)
+
+        # ── Delete the QR message ────────────────────────────────────────────
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+
+        # ── Ask user to provide UPI Transaction Reference (UTR) ──────────────
+        ask_msg = None
+        try:
+            ask_msg = await client.send_message(
+                chat_id=user_id,
+                text=(
+                    f"<blockquote>📋 <b>ᴇɴᴛᴇʀ ʏᴏᴜʀ ᴜᴛʀ ɴᴜᴍʙᴇʀ</b></blockquote>\n\n"
+                    f"<blockquote>ᴘʟᴇᴀsᴇ sᴇɴᴅ ʏᴏᴜʀ <b>ᴜᴘɪ ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ʀᴇꜰᴇʀᴇɴᴄᴇ (ᴜᴛʀ)</b> ɴᴜᴍʙᴇʀ.</blockquote>\n\n"
+                    f"<blockquote expandable>ʜᴏᴡ ᴛᴏ ꜰɪɴᴅ ᴜᴛʀ:\n"
+                    f"• <b>Paytm</b> → ʜɪsᴛᴏʀʏ → ᴛᴀᴘ ᴛʀᴀɴsᴀᴄᴛɪᴏɴ → ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ\n"
+                    f"• <b>GPay / PhonePe</b> → ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ʜɪsᴛᴏʀʏ → ᴜᴛʀ ɴᴜᴍʙᴇʀ\n"
+                    f"• ᴇxᴀᴍᴘʟᴇ: <code>T2506271234567890</code></blockquote>\n\n"
+                    f"<blockquote>⏳ ʏᴏᴜ ʜᴀᴠᴇ <b>3 ᴍɪɴᴜᴛᴇs</b> ᴛᴏ sᴇɴᴅ ᴛʜᴇ ᴜᴛʀ.</blockquote>"
+                ),
+            )
+        except Exception as ask_err:
+            print(f"[cbb] pmt_done: ask_msg failed: {ask_err}")
+
+        # ── Wait for UTR via pyromod listen ───────────────────────────────────
+        utr_text = "ɴᴏᴛ ᴘʀᴏᴠɪᴅᴇᴅ"
+        try:
+            utr_response = await client.listen(user_id, timeout=180)
+            if utr_response and utr_response.text:
+                utr_text = utr_response.text.strip()[:100]  # cap at 100 chars
+        except asyncio.TimeoutError:
+            utr_text = "ᴛɪᴍᴇᴅ ᴏᴜᴛ"
+        except Exception as listen_err:
+            print(f"[cbb] pmt_done: listen failed: {listen_err}")
+
+        # Delete the "ask" message
+        if ask_msg:
+            try:
+                await ask_msg.delete()
+            except Exception:
+                pass
+
+        # ── Create payment request in DB ─────────────────────────────────────
         plan_type_db = "super" if plan_key.startswith("sp") else "normal"
         await db.create_payment_request(
             user_id=user_id,
@@ -277,20 +379,24 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             amount=amount,
         )
 
-        # Notify user
-        await query.answer("✅ ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ɪs ʙᴇɪɴɢ ʀᴇᴠɪᴇᴡᴇᴅ!", show_alert=False)
+        # ── Store UTR separately ─────────────────────────────────────────────
         try:
-            await query.message.delete()
-        except Exception:
-            pass
+            await db.payment_requests.update_one(
+                {'_id': user_id},
+                {'$set': {'utr': utr_text}}
+            )
+        except Exception as utr_err:
+            print(f"[cbb] UTR store failed: {utr_err}")
 
+        # ── Notify user ───────────────────────────────────────────────────────
         try:
             await client.send_message(
                 chat_id=user_id,
                 text=(
                     f"<blockquote>⏳ <b>ᴘᴀʏᴍᴇɴᴛ ᴜɴᴅᴇʀ ʀᴇᴠɪᴇᴡ</b></blockquote>\n\n"
-                    f"<blockquote>ʏᴏᴜʀ ᴘᴀʏᴍᴇɴᴛ ꜰᴏʀ <b>{plan_type_str} — {plan_label}</b> (₹{amount}) ɪs ʙᴇɪɴɢ ᴄʜᴇᴄᴋᴇᴅ ʙʏ ᴏᴜʀ ᴛᴇᴀᴍ.</blockquote>\n"
-                    f"<blockquote>ʏᴏᴜʀ ᴘʟᴀɴ ᴡɪʟʟ ʙᴇ ᴀᴄᴛɪᴠᴀᴛᴇᴅ sᴏᴏɴ ᴀꜰᴛᴇʀ ᴄᴏɴꜰɪʀᴍᴀᴛɪᴏɴ. 🙏</blockquote>"
+                    f"<blockquote>ᴘʟᴀɴ: <b>{plan_type_str} — {plan_label}</b> (₹{amount})</blockquote>\n"
+                    f"<blockquote>ᴜᴛʀ: <code>{utr_text}</code></blockquote>\n\n"
+                    f"<blockquote>✅ ᴡᴇ ᴡɪʟʟ ᴠᴇʀɪꜰʏ ᴀɴᴅ ᴀᴄᴛɪᴠᴀᴛᴇ ʏᴏᴜʀ ᴘʟᴀɴ sᴏᴏɴ. 🙏</blockquote>"
                 ),
                 reply_markup=InlineKeyboardMarkup([
                     [InlineKeyboardButton("💬 ᴄᴏɴᴛᴀᴄᴛ ᴀᴅᴍɪɴ", url=f"https://t.me/{OWNER_TAG}")],
@@ -299,7 +405,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
         except Exception:
             pass
 
-        # Notify all admins + owner
+        # ── Notify all admins + owner (including UTR) ─────────────────────────
         user_mention = query.from_user.mention
         username_str = f"@{query.from_user.username}" if query.from_user.username else "ɴ/ᴀ"
         admin_text = (
@@ -307,8 +413,9 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             f"<blockquote>» ᴜsᴇʀ: {user_mention} ({username_str})</blockquote>\n"
             f"<blockquote>» ɪᴅ: <code>{user_id}</code></blockquote>\n"
             f"<blockquote>» ᴘʟᴀɴ: <b>{plan_type_str} — {plan_label}</b></blockquote>\n"
-            f"<blockquote>» ᴀᴍᴏᴜɴᴛ: <b>₹{amount}</b></blockquote>\n\n"
-            f"<blockquote>ᴅɪᴅ ʏᴏᴜ ʀᴇᴄᴇɪᴠᴇ ᴛʜɪs ᴘᴀʏᴍᴇɴᴛ? ᴘʟᴇᴀsᴇ ᴀᴘᴘʀᴏᴠᴇ ᴏʀ ʀᴇᴊᴇᴄᴛ ʙᴇʟᴏᴡ.</blockquote>"
+            f"<blockquote>» ᴀᴍᴏᴜɴᴛ: <b>₹{amount}</b></blockquote>\n"
+            f"<blockquote>» ᴜᴘɪ ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ɪᴅ (ᴜᴛʀ): <code>{utr_text}</code></blockquote>\n\n"
+            f"<blockquote>ᴠᴇʀɪꜰʏ ᴛʜɪs ᴜᴛʀ ɪɴ ʏᴏᴜʀ Paytm ᴍᴇʀᴄʜᴀɴᴛ ᴅᴀsʜʙᴏᴀʀᴅ, ᴛʜᴇɴ ᴀᴘᴘʀᴏᴠᴇ ᴏʀ ʀᴇᴊᴇᴄᴛ.</blockquote>"
         )
         admin_markup = InlineKeyboardMarkup([
             [
@@ -363,6 +470,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
         plan = _plan_key_to_info(plan_key)
         plan_label = plan['label'] if plan else f"{days} ᴅᴀʏs"
         plan_type_str = "Super Premium" if plan_type == "super" else "Normal Premium"
+        utr_stored = req.get('utr', 'ɴ/ᴀ')
 
         if plan_type == "super":
             from database.db_premium import add_super_premium
@@ -379,6 +487,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             f"<blockquote>✅ <b>ᴘᴀʏᴍᴇɴᴛ ᴀᴘᴘʀᴏᴠᴇᴅ</b></blockquote>\n\n"
             f"<blockquote>» ᴜsᴇʀ ɪᴅ: <code>{target_uid}</code></blockquote>\n"
             f"<blockquote>» ᴘʟᴀɴ: <b>{plan_type_str} — {plan_label}</b></blockquote>\n"
+            f"<blockquote>» ᴜᴛʀ: <code>{utr_stored}</code></blockquote>\n"
             f"<blockquote>» ᴀᴘᴘʀᴏᴠᴇᴅ ʙʏ: <code>{approver_id}</code></blockquote>\n"
             f"<blockquote>» ᴇxᴘɪʀᴇs: <code>{expiry}</code></blockquote>"
         )
@@ -447,12 +556,14 @@ async def cb_handler(client: Bot, query: CallbackQuery):
         plan = _plan_key_to_info(plan_key)
         plan_label = plan['label'] if plan else f"{req.get('days', '?')} ᴅᴀʏs"
         plan_type_str = "Super Premium" if req.get('plan_type') == "super" else "Normal Premium"
+        utr_stored = req.get('utr', 'ɴ/ᴀ')
 
         # Edit all admin messages
         resolved_text = (
             f"<blockquote>❌ <b>ᴘᴀʏᴍᴇɴᴛ ʀᴇᴊᴇᴄᴛᴇᴅ</b></blockquote>\n\n"
             f"<blockquote>» ᴜsᴇʀ ɪᴅ: <code>{target_uid}</code></blockquote>\n"
             f"<blockquote>» ᴘʟᴀɴ: <b>{plan_type_str} — {plan_label}</b></blockquote>\n"
+            f"<blockquote>» ᴜᴛʀ: <code>{utr_stored}</code></blockquote>\n"
             f"<blockquote>» ʀᴇᴊᴇᴄᴛᴇᴅ ʙʏ: <code>{rejecter_id}</code></blockquote>"
         )
         for entry in req.get('admin_msg_ids', []):
