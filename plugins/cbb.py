@@ -358,7 +358,16 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             await query.answer("❌ ᴛʜɪs ɪs ɴᴏᴛ ʏᴏᴜʀ ᴏʀᴅᴇʀ.", show_alert=True)
             return
 
-        await query.answer("⏳ ᴄʜᴇᴄᴋɪɴɢ ᴘᴀʏᴛᴍ...", show_alert=False)
+        # ── Answer query ONCE — edit caption to show checking state ──────────
+        # NOTE: query.answer() can only be called ONCE per callback.
+        # We edit the caption first to show progress, then answer on result.
+        try:
+            await query.message.edit_caption(
+                caption="⏳ <b>ᴄʜᴇᴄᴋɪɴɢ ᴘᴀʏᴛᴍ...</b> ᴘʟᴇᴀsᴇ ᴡᴀɪᴛ.",
+                reply_markup=None,
+            )
+        except Exception:
+            pass
 
         result = await verify_payment_once(order_id, order["amount"])
 
@@ -367,12 +376,13 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             plan_type_str = "🚀 sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ" if order["plan_type"] == "super" else "💎 ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ"
             plan_label = f"{plan_type_str} — {plan.get('label', str(order['days']) + ' ᴅᴀʏs')}"
 
-            await query.answer("✅ ᴘᴀʏᴍᴇɴᴛ ᴠᴇʀɪꜰɪᴇᴅ!", show_alert=True)
+            # Single query.answer — only call here (caption was edited above, not answered)
             try:
-                await query.message.delete()
+                await query.answer("✅ ᴘᴀʏᴍᴇɴᴛ ᴠᴇʀɪꜰɪᴇᴅ!", show_alert=True)
             except Exception:
                 pass
 
+            # on_payment_success deletes the QR message (qr_message_id = query.message.id)
             await on_payment_success(
                 client=client,
                 user_id=order["user_id"],
@@ -384,13 +394,33 @@ async def cb_handler(client: Bot, query: CallbackQuery):
                 plan_label=plan_label,
                 txn_info=result,
                 chat_id=query.message.chat.id,
+                qr_message_id=query.message.id,
             )
         else:
-            await query.answer(
-                "⏳ ᴘᴀʏᴍᴇɴᴛ ɴᴏᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ ʏᴇᴛ.\n\n"
-                "ᴡᴀɪᴛ 1-2 ᴍɪɴs ᴀꜰᴛᴇʀ ᴘᴀʏɪɴɢ & ᴛʀʏ ᴀɢᴀɪɴ.",
-                show_alert=True
-            )
+            try:
+                await query.message.edit_caption(
+                    caption=(
+                        f"<blockquote>💳 <b>ᴘᴀʏᴍᴇɴᴛ ɴᴏᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ ʏᴇᴛ</b></blockquote>\n\n"
+                        f"<blockquote>ɪꜰ ʏᴏᴜ ᴀʟʀᴇᴀᴅʏ ᴘᴀɪᴅ, ᴡᴀɪᴛ 1-2 ᴍɪɴs ᴀɴᴅ ᴛᴀᴘ <b>ɪ ʜᴀᴠᴇ ᴘᴀɪᴅ</b> ᴀɢᴀɪɴ.\n"
+                        f"ᴏʀᴅᴇʀ ɪᴅ: <code>{order_id}</code></blockquote>"
+                    ),
+                    reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("✅ ɪ ʜᴀᴠᴇ ᴘᴀɪᴅ", callback_data=f"pmt_done_{order_id}")],
+                        [
+                            InlineKeyboardButton("💬 sᴜᴘᴘᴏʀᴛ", url=f"https://t.me/{OWNER_TAG}"),
+                            InlineKeyboardButton("❌ ᴄᴀɴᴄᴇʟ", callback_data=f"pmt_cancel_{order_id}"),
+                        ],
+                    ]),
+                )
+            except Exception:
+                pass
+            try:
+                await query.answer(
+                    "⏳ ᴘᴀʏᴍᴇɴᴛ ɴᴏᴛ ᴅᴇᴛᴇᴄᴛᴇᴅ ʏᴇᴛ.\nᴡᴀɪᴛ 1-2 ᴍɪɴs & ᴛʀʏ ᴀɢᴀɪɴ.",
+                    show_alert=True
+                )
+            except Exception:
+                pass
 
     # ── Cancel order ──────────────────────────────────────────────────────────
     elif data.startswith("pmt_cancel_"):
@@ -650,6 +680,124 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             )
         except Exception as e:
             print(f"[cbb] fsub_back error: {e}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# /id <DD-MM-YYYY>  — Admin: daily transaction report
+# ─────────────────────────────────────────────────────────────────────────────
+
+@Bot.on_message(filters.command("id") & filters.private)
+async def id_transactions_cmd(client: Bot, message: Message):
+    """
+    /id 28-06-2026  →  shows all successful transactions for that day (IST)
+    plus the total amount received. Admin/owner only.
+    """
+    from config import OWNER_ID
+    try:
+        from config import ADMINS
+        admin_ids = list(ADMINS) if ADMINS else []
+    except ImportError:
+        admin_ids = []
+    if OWNER_ID not in admin_ids:
+        admin_ids.append(OWNER_ID)
+
+    if message.from_user.id not in admin_ids:
+        return  # silently ignore non-admins
+
+    args = message.text.split(maxsplit=1)
+    if len(args) < 2 or not args[1].strip():
+        await message.reply(
+            "<blockquote>📋 <b>ᴜsᴀɢᴇ</b></blockquote>\n\n"
+            "<blockquote><code>/id DD-MM-YYYY</code></blockquote>\n"
+            "<blockquote>ᴇxᴀᴍᴘʟᴇ: <code>/id 28-06-2026</code></blockquote>"
+        )
+        return
+
+    date_str = args[1].strip()
+    try:
+        day, month, year = date_str.split('-')
+        # Date range in UTC (IST = UTC+5:30, so IST midnight = UTC 18:30 prev day)
+        # We use IST midnight to IST midnight for the date window
+        ist_offset = timedelta(hours=5, minutes=30)
+        ist_start = datetime(int(year), int(month), int(day), 0, 0, 0) - ist_offset
+        ist_end   = ist_start + timedelta(days=1)
+        start_utc = ist_start.replace(tzinfo=timezone.utc)
+        end_utc   = ist_end.replace(tzinfo=timezone.utc)
+    except Exception:
+        await message.reply(
+            "<blockquote>❌ <b>ɪɴᴠᴀʟɪᴅ ᴅᴀᴛᴇ ꜰᴏʀᴍᴀᴛ</b></blockquote>\n\n"
+            "<blockquote>ᴜsᴇ ꜰᴏʀᴍᴀᴛ: <code>DD-MM-YYYY</code>\n"
+            "ᴇxᴀᴍᴘʟᴇ: <code>/id 28-06-2026</code></blockquote>"
+        )
+        return
+
+    orders = await db.get_orders_by_date(start_utc, end_utc)
+
+    if not orders:
+        await message.reply(
+            f"<blockquote>📊 <b>ᴛʀᴀɴsᴀᴄᴛɪᴏɴs — {date_str}</b></blockquote>\n\n"
+            f"<blockquote>ɴᴏ sᴜᴄᴄᴇssꜰᴜʟ ᴛʀᴀɴsᴀᴄᴛɪᴏɴs ꜰᴏᴜɴᴅ ꜰᴏʀ ᴛʜɪs ᴅᴀᴛᴇ.</blockquote>"
+        )
+        return
+
+    total = sum(float(o.get('amount', 0)) for o in orders)
+    lines = []
+
+    for i, o in enumerate(orders, 1):
+        # Format completion time in IST
+        completed_at = o.get('completed_at') or o.get('created_at')
+        if completed_at:
+            try:
+                from pytz import timezone as _pytz_tz
+                ist = _pytz_tz("Asia/Kolkata")
+                if not completed_at.tzinfo:
+                    completed_at = completed_at.replace(tzinfo=timezone.utc)
+                time_ist = completed_at.astimezone(ist).strftime("%I:%M %p")
+            except Exception:
+                time_ist = str(completed_at)[:16]
+        else:
+            time_ist = "N/A"
+
+        plan_label = o.get('plan_key', 'N/A')
+        plan_type  = o.get('plan_type', 'normal')
+        plan_emoji = "🚀" if plan_type == "super" else "💎"
+        txn_id     = o.get('txn_id') or "N/A"
+        uid        = o.get('user_id', 'N/A')
+        amt        = o.get('amount', 0)
+
+        lines.append(
+            f"<blockquote>{i}. {plan_emoji} <b>₹{amt}</b>  |  {time_ist} IST\n"
+            f"» ᴜsᴇʀ: <code>{uid}</code>\n"
+            f"» ᴘʟᴀɴ: <code>{plan_label}</code> ({plan_type})\n"
+            f"» ᴛxɴ ɪᴅ: <code>{txn_id}</code></blockquote>"
+        )
+
+    # Telegram message size limit — split if too large
+    header = (
+        f"<blockquote>📊 <b>ᴛʀᴀɴsᴀᴄᴛɪᴏɴs — {date_str}</b></blockquote>\n\n"
+    )
+    footer = (
+        f"\n<blockquote>💰 <b>ᴛᴏᴛᴀʟ ʀᴇᴄᴇɪᴠᴇᴅ: ₹{total:.0f}</b> "
+        f"({len(orders)} ᴛʀᴀɴsᴀᴄᴛɪᴏɴ{'s' if len(orders) != 1 else ''})</blockquote>"
+    )
+
+    body = "\n".join(lines)
+    full_msg = header + body + footer
+
+    # If too long, split into chunks
+    if len(full_msg) > 4000:
+        await message.reply(header + f"<blockquote>({len(orders)} ᴛʀᴀɴsᴀᴄᴛɪᴏɴs ꜰᴏᴜɴᴅ)</blockquote>")
+        chunk = ""
+        for line in lines:
+            if len(chunk) + len(line) > 3800:
+                await message.reply(chunk)
+                chunk = ""
+            chunk += line + "\n"
+        if chunk:
+            await message.reply(chunk)
+        await message.reply(footer)
+    else:
+        await message.reply(full_msg)
 
 
 # Don't Remove Credit @CodeFlix_Bots, @rohit_1888
