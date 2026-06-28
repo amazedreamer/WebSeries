@@ -43,6 +43,10 @@ async def daily_reset_task():
         await db.reset_all_daily_stats()
     except Exception:
         pass
+    try:
+        await db.reset_all_free_access_counts()
+    except Exception:
+        pass
 
 
 scheduler.add_job(daily_reset_task, "cron", hour=0, minute=0)
@@ -96,6 +100,8 @@ BOT_COMMANDS = [
     BotCommand("deladmin",       "(ᴏᴡɴᴇʀ) ʀᴇᴍᴏᴠᴇ ᴀ ʙᴏᴛ ᴀᴅᴍɪɴ"),
     BotCommand("admins",         "(ᴀᴅᴍɪɴ) ʟɪꜱᴛ ʙᴏᴛ ᴀᴅᴍɪɴꜱ"),
     BotCommand("hash",           "(ᴀᴅᴍɪɴ) ʜᴀꜱʜ ꜱᴇᴛᴛɪɴɢꜱ"),
+    BotCommand("id",             "(ᴀᴅᴍɪɴ) ᴅᴀɪʟʏ ᴛʀᴀɴsᴀᴄᴛɪᴏɴ ʀᴇᴘᴏʀᴛ (/id DD-MM-YYYY)"),
+    BotCommand("free",           "(ᴀᴅᴍɪɴ) sᴇᴛ ᴘʀᴇᴍɪᴜᴍ ᴍᴏᴅᴇ ꜰʀᴇᴇ ʟɪᴍɪᴛ (/free N)"),
 ]
 
 
