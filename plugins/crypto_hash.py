@@ -174,15 +174,33 @@ VMODE_INFO = {
     },
 }
 
+BOT_MODE_INFO = {
+    'free': {
+        'label': '🟢 ꜰʀᴇᴇ',
+        'description': 'ᴀʟʟ ᴜsᴇʀs ɢᴇᴛ ꜰɪʟᴇs ꜰʀᴇᴇʟʏ — ɴᴏ ᴛᴏᴋᴇɴ ᴏʀ ᴘʀᴇᴍɪᴜᴍ ɴᴇᴇᴅᴇᴅ',
+    },
+    'token': {
+        'label': '🔗 ᴛᴏᴋᴇɴ',
+        'description': 'ᴜsᴇʀ ᴍᴜsᴛ sᴏʟᴠᴇ sʜᴏʀᴛᴇɴᴇʀ ᴏʀ ʜᴀᴠᴇ ᴘʀᴇᴍɪᴜᴍ',
+    },
+    'premium': {
+        'label': '💎 ᴘʀᴇᴍɪᴜᴍ',
+        'description': 'N ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱᴇꜱ ᴛʜᴇɴ ᴘʀᴇᴍɪᴜᴍ ʀᴇǫᴜɪʀᴇᴅ (/free N ᴛᴏ sᴇᴛ)',
+    },
+}
+
 
 async def show_hash_panel(client, query_or_message):
-    """Display the hash algorithm selection + verification mode + invite mode panel."""
+    """Display the hash algorithm selection + verification mode + invite mode + bot access mode panel."""
     current_algo = await db.get_hash_algorithm()
     current_info = ALGORITHMS.get(current_algo, ALGORITHMS["sha256"])
     current_vmode = await db.get_verification_mode()
     vmode_info = VMODE_INFO.get(current_vmode, VMODE_INFO['instant'])
     invite_mode = await db.get_invite_link_mode()
     invite_channel_id = await db.get_invite_channel()
+    current_bot_mode = await db.get_bot_mode()
+    bot_mode_info = BOT_MODE_INFO.get(current_bot_mode, BOT_MODE_INFO['token'])
+    free_limit = await db.get_premium_mode_free_limit()
 
     # Build invite mode status line for caption
     if invite_mode == "channel":
@@ -208,7 +226,11 @@ async def show_hash_panel(client, query_or_message):
         f"<b>• ᴄᴜʀʀᴇɴᴛ ᴍᴏᴅᴇ:</b> {vmode_info['label']}\n"
         f"<b>• ɪɴꜰᴏ:</b> {vmode_info['description']}\n\n"
         "<blockquote><b>🔗 ɪɴᴠɪᴛᴇ ʟɪɴᴋ ᴍᴏᴅᴇ</b></blockquote>\n"
-        f"<b>• ᴄᴜʀʀᴇɴᴛ:</b> {invite_mode_line}"
+        f"<b>• ᴄᴜʀʀᴇɴᴛ:</b> {invite_mode_line}\n\n"
+        "<blockquote><b>🚦 ʙᴏᴛ ᴀᴄᴄᴇss ᴍᴏᴅᴇ</b></blockquote>\n"
+        f"<b>• ᴄᴜʀʀᴇɴᴛ:</b> {bot_mode_info['label']}\n"
+        f"<b>• ɪɴꜰᴏ:</b> {bot_mode_info['description']}\n"
+        f"<b>• ꜰʀᴇᴇ ʟɪᴍɪᴛ (ᴘʀᴇᴍɪᴜᴍ ᴍᴏᴅᴇ):</b> {free_limit} ꜰɪʟᴇs (/free N ᴛᴏ ᴄʜᴀɴɢᴇ)"
     )
 
     # Build algorithm buttons with current selection marked
@@ -245,6 +267,18 @@ async def show_hash_panel(client, query_or_message):
             callback_data="set_invite_mode_channel"
         ),
     ])
+
+    # Bot access mode row — Free / Token / Premium in one row
+    bot_mode_row = []
+    for mkey, minfo in BOT_MODE_INFO.items():
+        marker = " ✓" if mkey == current_bot_mode else ""
+        bot_mode_row.append(
+            InlineKeyboardButton(
+                f"{minfo['label']}{marker}",
+                callback_data=f"set_bot_mode_{mkey}"
+            )
+        )
+    buttons.append(bot_mode_row)
 
     buttons.append([InlineKeyboardButton("• ᴄʟᴏsᴇ •", callback_data="close")])
 
@@ -344,3 +378,42 @@ async def set_invite_mode_callback(client: Client, query: CallbackQuery):
         await query.answer("✅ Invite mode set to Bot Link!", show_alert=False)
 
     await show_hash_panel(client, query)
+
+
+@Bot.on_callback_query(filters.regex(r'^set_bot_mode_'))
+async def set_bot_mode_callback(client: Client, query: CallbackQuery):
+    """Handle bot access mode selection — Free / Token / Premium."""
+    user_id = query.from_user.id
+    if user_id != OWNER_ID and not await db.admin_exist(user_id):
+        return await query.answer("⚠️ Only admins can change this setting.", show_alert=True)
+
+    mode = query.data.replace("set_bot_mode_", "")
+
+    if mode not in BOT_MODE_INFO:
+        return await query.answer("❌ Invalid mode!", show_alert=True)
+
+    await db.set_bot_mode(mode)
+
+    minfo = BOT_MODE_INFO[mode]
+    await query.answer(f"✅ Bot mode set to {minfo['label']}!", show_alert=True)
+    await show_hash_panel(client, query)
+
+
+@Bot.on_message(filters.command('free') & filters.private & admin)
+async def set_free_limit_cmd(client: Client, message: Message):
+    """Admin command: /free <N> — set the free access limit for Premium Mode."""
+    try:
+        limit = int(message.command[1])
+        if limit < 1:
+            raise ValueError("Limit must be ≥ 1")
+        await db.set_premium_mode_free_limit(limit)
+        await message.reply(
+            f"<blockquote>✅ ꜰʀᴇᴇ ᴀᴄᴄᴇss ʟɪᴍɪᴛ sᴇᴛ ᴛᴏ <b>{limit}</b> ꜰɪʟᴇs ᴘᴇʀ ᴜsᴇʀ.</blockquote>\n"
+            f"<blockquote>ᴛʜɪs ᴀᴘᴘʟɪᴇs ᴡʜᴇɴ ʙᴏᴛ ᴍᴏᴅᴇ ɪs 💎 ᴘʀᴇᴍɪᴜᴍ.</blockquote>"
+        )
+    except (IndexError, ValueError):
+        current = await db.get_premium_mode_free_limit()
+        await message.reply(
+            f"<blockquote>📋 <b>ᴜsᴀɢᴇ:</b> <code>/free &lt;ɴᴜᴍʙᴇʀ&gt;</code></blockquote>\n"
+            f"<blockquote>ᴄᴜʀʀᴇɴᴛ ʟɪᴍɪᴛ: <b>{current}</b> ꜰɪʟᴇs ᴘᴇʀ ᴜsᴇʀ</blockquote>"
+        )
