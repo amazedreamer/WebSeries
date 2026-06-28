@@ -396,8 +396,8 @@ async def start_command(client: Client, message: Message):
                     await message.reply_text(
                         "<blockquote>💎 <b>ꜰʀᴇᴇ ᴀᴄᴄᴇss ᴇxʜᴀᴜsᴛᴇᴅ</b></blockquote>\n\n"
                         f"<blockquote>ʏᴏᴜ'ᴠᴇ ᴜꜱᴇᴅ ᴀʟʟ <b>{free_limit}</b> ᴏꜰ ʏᴏᴜʀ ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱ sʟᴏᴛs.</blockquote>\n\n"
-                        "<blockquote>ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ɢᴇᴛᴛɪɴɢ ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇs, ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ:</blockquote>\n\n"
-                        "<blockquote expandable>💎 <b>ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ</b> — ᴢᴇʀᴏ ᴀᴅs, ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss\n"
+                        "<blockquote>ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ɢᴇᴛᴛɪɴɢ ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇs, ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ:</blockquote>\n"
+                        "<blockquote>💎 <b>ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ</b> — ᴢᴇʀᴏ ᴀᴅs, ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss\n"
                         "🚀 <b>sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ</b> — ᴜɴʟɪᴍɪᴛᴇᴅ + ᴄᴏᴘʏ/ꜰᴏʀᴡᴀʀᴅ ᴇɴᴀʙʟᴇᴅ</blockquote>",
                         reply_markup=InlineKeyboardMarkup([
                             [InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")],
