@@ -43,12 +43,12 @@ BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
 DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://urvashiix:dThGnaimQESSvwFT@urvashiix.evuqrai.mongodb.net/?appName=urvashiix")
 DB_NAME = os.environ.get("DATABASE_NAME", "PromoCHBot")
 # --------------------------------------------
-FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "300"))  # 0 means no expiry
-BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/SATYAM_SELLER")
+FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "3000"))  # 0 means no expiry
+BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/ToxicXAdminRoBot")
 TG_BOT_WORKERS = int(os.environ.get("TG_BOT_WORKERS", "200"))
 # --------------------------------------------
-START_PIC = os.environ.get("START_PIC", "https://i.ibb.co/yn8JySKM/Gemini-Generated-Image-cxcl4hcxcl4hcxcl.png")
-FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.ibb.co/TD4nhdzR/Gemini-Generated-Image-qaxp7vqaxp7vqaxp.png")
+START_PIC = os.environ.get("START_PIC", "https://i.postimg.cc/NG2zYyb8/Gemini-Generated-Image-qmxwtbqmxwtbqmxw.png")
+FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.postimg.cc/YCBcTNHW/Gemini-Generated-Image-ibmbzzibmbzzibmb.png")
 
 # --------------------------------------------
 # =============================================
@@ -115,7 +115,7 @@ SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECO
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
 
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/TEAM_EXCLUSIVE_ONLY/3")
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/6")
 SHORT_MSG = (
     f"<blockquote>✨ <b>{small_caps('ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}</blockquote>"
@@ -125,17 +125,17 @@ SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/8ggPBWDS/Gemin
 # --------------------------------------------
 
 # --------------------------------------------
-HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @SATYAM_SELLER\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
+HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheToxicMeme\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n\n"
-    f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/Ebadmindmbot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
+    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheToxicMeme</blockquote>\n\n"
+    f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/ToxicXAdminRoBot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
 # --------------------------------------------
 START_MSG = (
     f"<blockquote>👤 <b>{small_caps('ᴡᴇʟᴄᴏᴍᴇ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @SATYAM_SELLER</blockquote>\n"
+    f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheToxicMeme</blockquote>\n"
     f"<blockquote>{small_caps('ᴜsᴇ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ.')}</blockquote>"
 )
 
@@ -169,7 +169,7 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇꜰᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TEAMxGODS</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TheToxicMeme</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
@@ -179,7 +179,7 @@ USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇ
 
 # ==========================(BUY PREMIUM)====================#
 
-OWNER_TAG = os.environ.get("OWNER_TAG", "SATYAM_SELLER")
+OWNER_TAG = os.environ.get("OWNER_TAG", "ToxicXAdminRoBot")
 
 # ── Paytm UPI Payment Details ──────────────────────────────────────────────
 # Dynamic QR codes are generated per-plan using these details.
@@ -194,7 +194,7 @@ PAYTM_MID       = os.environ.get("PAYTM_MID",       "PKNtOC25387320837859")   # 
 # Returns JSON with STATUS, ORDERID, TXNAMOUNT, TXNID, BANKTXNID, TXNDATE.
 PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://pay-api-master.vercel.app/")
 PAYMENT_VERIFY_INTERVAL = int(os.environ.get("PAYMENT_VERIFY_INTERVAL", "120"))  # secs between polls
-PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "20"))   # order expiry
+PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "15"))   # order expiry
 AMOUNT_TOLERANCE        = float(os.environ.get("AMOUNT_TOLERANCE",      "2"))    # ₹ tolerance
 # Channel where successful payment receipts are logged (defaults to DB channel)
 PAYMENT_LOG_CHANNEL_ID  = int(os.environ.get("PAYMENT_LOG_CHANNEL_ID",  "-1004450452379"))
@@ -202,26 +202,26 @@ PAYMENT_LOG_CHANNEL_ID  = int(os.environ.get("PAYMENT_LOG_CHANNEL_ID",  "-100445
 # Legacy static QR pic — kept for fallback only; dynamic QR is used by default.
 QR_PIC          = os.environ.get("QR_PIC",          "")
 
-SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/NotYourDemonOp")
+SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/ToxicXAdminRoBot")
 # --------------------------------------------
 # Time and its price
 # 10 Days
-PRICE1 = os.environ.get("PRICE1", "1 rs")
+PRICE1 = os.environ.get("PRICE1", "₹ 10")
 # 1 Month
-PRICE2 = os.environ.get("PRICE2", "99 rs")
+PRICE2 = os.environ.get("PRICE2", "₹ 50")
 # 3 Month
-PRICE3 = os.environ.get("PRICE3", "199 rs")
+PRICE3 = os.environ.get("PRICE3", "₹ 100")
 # 6 Month
-PRICE4 = os.environ.get("PRICE4", "299")
+PRICE4 = os.environ.get("PRICE4", "₹ 169")
 
 PRICE5 = os.environ.get("PRICE4", "999")
 
 # Super Premium Prices
-PRICE_SP_1 = os.environ.get("PRICE_SP_1", "2 rs")
-PRICE_SP_2 = os.environ.get("PRICE_SP_2", "149 rs")
-PRICE_SP_3 = os.environ.get("PRICE_SP_3", "299 rs")
-PRICE_SP_4 = os.environ.get("PRICE_SP_4", "499 rs")
-PRICE_SP_5 = os.environ.get("PRICE_SP_4", "999 rs")
+PRICE_SP_1 = os.environ.get("PRICE_SP_1", "₹ 20")
+PRICE_SP_2 = os.environ.get("PRICE_SP_2", "₹ 100")
+PRICE_SP_3 = os.environ.get("PRICE_SP_3", "₹ 199")
+PRICE_SP_4 = os.environ.get("PRICE_SP_4", "₹ 269")
+PRICE_SP_5 = os.environ.get("PRICE_SP_4", "₹ 999")
 
 # Plan definitions (used by buy-premium flow to generate QR + buttons)
 # key format: np_<id> for normal, sp_<id> for super
