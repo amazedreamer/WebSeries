@@ -23,6 +23,7 @@ from config import (
     REFERRAL_MILESTONES, PREMIUM_MSG_AUTO_DELETE_SECONDS,
     PAYMENT_MAX_MINUTES,
 )
+from helper_func import admin
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from database.database import db
 from database.db_premium import add_premium, is_premium_user, is_super_premium_user
@@ -686,25 +687,13 @@ async def cb_handler(client: Bot, query: CallbackQuery):
 # /id <DD-MM-YYYY>  — Admin: daily transaction report
 # ─────────────────────────────────────────────────────────────────────────────
 
-@Bot.on_message(filters.command("id") & filters.private)
+@Bot.on_message(filters.command("id") & filters.private & admin)
 async def id_transactions_cmd(client: Bot, message: Message):
     """
     /id 28-06-2026  →  shows all successful transactions for that day (IST)
     plus the total amount received. Admin/owner only.
     """
-    from config import OWNER_ID
-    try:
-        from config import ADMINS
-        admin_ids = list(ADMINS) if ADMINS else []
-    except ImportError:
-        admin_ids = []
-    if OWNER_ID not in admin_ids:
-        admin_ids.append(OWNER_ID)
-
-    if message.from_user.id not in admin_ids:
-        return  # silently ignore non-admins
-
-    args = message.text.split(maxsplit=1)
+    args = message.command  # ['id', '28-06-2026'] or just ['id']
     if len(args) < 2 or not args[1].strip():
         await message.reply(
             "<blockquote>📋 <b>ᴜsᴀɢᴇ</b></blockquote>\n\n"
@@ -713,7 +702,7 @@ async def id_transactions_cmd(client: Bot, message: Message):
         )
         return
 
-    date_str = args[1].strip()
+    date_str = args[1].strip().lstrip('/')
     try:
         day, month, year = date_str.split('-')
         # Date range in UTC (IST = UTC+5:30, so IST midnight = UTC 18:30 prev day)
