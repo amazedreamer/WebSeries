@@ -110,6 +110,14 @@ class Rohit:
         #                     admin_msg_ids: [(admin_id, msg_id), ...] }
         self.payment_requests = self.database['payment_requests']
 
+        # bot_mode_settings: { _id: 'bot_mode', mode: 'free'|'token'|'premium' }
+        #                     { _id: 'premium_free_limit', limit: int }
+        self.bot_mode_settings = self.database['bot_mode_settings']
+
+        # user_free_access: { _id: user_id, count: int }
+        # Tracks how many free files a user has accessed in Premium Mode
+        self.user_free_access = self.database['user_free_access']
+
     # ═══════════════════════════════════════════════════════════
     # USER DATA
     # ═══════════════════════════════════════════════════════════
@@ -1090,6 +1098,49 @@ class Rohit:
         if not txn_id:
             return False
         return bool(await self.orders.find_one({'txn_id': txn_id, 'status': 'success'}))
+
+    # ═══════════════════════════════════════════════════════════
+    # BOT ACCESS MODE (Free / Token / Premium)
+    # ═══════════════════════════════════════════════════════════
+
+    async def get_bot_mode(self) -> str:
+        """Get the current bot access mode: 'free', 'token', or 'premium'."""
+        doc = await self.bot_mode_settings.find_one({'_id': 'bot_mode'})
+        return doc.get('mode', 'token') if doc else 'token'
+
+    async def set_bot_mode(self, mode: str):
+        """Set the bot access mode ('free', 'token', or 'premium')."""
+        await self.bot_mode_settings.update_one(
+            {'_id': 'bot_mode'},
+            {'$set': {'mode': mode}},
+            upsert=True
+        )
+
+    async def get_premium_mode_free_limit(self) -> int:
+        """Get the free file access limit per user in Premium Mode (default 3)."""
+        doc = await self.bot_mode_settings.find_one({'_id': 'premium_free_limit'})
+        return int(doc.get('limit', 3)) if doc else 3
+
+    async def set_premium_mode_free_limit(self, limit: int):
+        """Set the free file access limit per user in Premium Mode."""
+        await self.bot_mode_settings.update_one(
+            {'_id': 'premium_free_limit'},
+            {'$set': {'limit': int(limit)}},
+            upsert=True
+        )
+
+    async def get_user_free_access_count(self, user_id: int) -> int:
+        """Get how many free files a user has accessed in Premium Mode."""
+        doc = await self.user_free_access.find_one({'_id': int(user_id)})
+        return int(doc.get('count', 0)) if doc else 0
+
+    async def increment_user_free_access(self, user_id: int):
+        """Increment the free access counter for a user in Premium Mode."""
+        await self.user_free_access.update_one(
+            {'_id': int(user_id)},
+            {'$inc': {'count': 1}},
+            upsert=True
+        )
 
 
 db = Rohit(DB_URI, DB_NAME)
