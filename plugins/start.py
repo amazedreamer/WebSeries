@@ -368,80 +368,121 @@ async def start_command(client: Client, message: Message):
         else:
             base64_string = basic
 
-        if not is_premium and not is_super_premium and user_id != OWNER_ID and not basic.startswith("yu3elk"):
-            _vmode = await db.get_verification_mode()
-            if _vmode != 'instant':
-                _has_access, _ = await db.check_shortener_access(user_id)
-                if _has_access:
+        # ── Bot access mode gate ─────────────────────────────────────────────
+        bot_mode = await db.get_bot_mode()
+
+        if bot_mode == 'free':
+            # Free Mode: no restrictions — serve file directly
+            try:
+                if is_premium or is_super_premium or user_id == OWNER_ID:
+                    await db.record_premium_access(user_id, base64_string)
+            except Exception:
+                pass
+
+        elif bot_mode == 'premium':
+            # Premium Mode: premium users pass freely; others get N free accesses
+            if is_premium or is_super_premium or user_id == OWNER_ID:
+                try:
+                    await db.record_premium_access(user_id, base64_string)
+                except Exception:
                     pass
+            else:
+                free_limit = await db.get_premium_mode_free_limit()
+                free_used = await db.get_user_free_access_count(user_id)
+                if free_used < free_limit:
+                    await db.increment_user_free_access(user_id)
+                    # fall through to serve file
+                else:
+                    await message.reply_text(
+                        "<blockquote>💎 <b>ꜰʀᴇᴇ ᴀᴄᴄᴇss ᴇxʜᴀᴜsᴛᴇᴅ</b></blockquote>\n\n"
+                        f"<blockquote>ʏᴏᴜ'ᴠᴇ ᴜꜱᴇᴅ ᴀʟʟ <b>{free_limit}</b> ᴏꜰ ʏᴏᴜʀ ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱ sʟᴏᴛs.</blockquote>\n\n"
+                        "<blockquote>ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ɢᴇᴛᴛɪɴɢ ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇs, ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ:</blockquote>\n\n"
+                        "<blockquote expandable>💎 <b>ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ</b> — ᴢᴇʀᴏ ᴀᴅs, ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss\n"
+                        "🚀 <b>sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ</b> — ᴜɴʟɪᴍɪᴛᴇᴅ + ᴄᴏᴘʏ/ꜰᴏʀᴡᴀʀᴅ ᴇɴᴀʙʟᴇᴅ</blockquote>",
+                        reply_markup=InlineKeyboardMarkup([
+                            [InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")],
+                            [InlineKeyboardButton("🎁 ʀᴇꜰᴇʀ & ᴇᴀʀɴ ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ", callback_data="free_premium")],
+                            [InlineKeyboardButton("✖️ ᴄʟᴏsᴇ", callback_data="close")],
+                        ]),
+                    )
+                    return
+
+        else:
+            # Token Mode (default): shortener required for non-premium users
+            if not is_premium and not is_super_premium and user_id != OWNER_ID and not basic.startswith("yu3elk"):
+                _vmode = await db.get_verification_mode()
+                if _vmode != 'instant':
+                    _has_access, _ = await db.check_shortener_access(user_id)
+                    if _has_access:
+                        pass
+                    else:
+                        await short_url(client, message, base64_string)
+                        return
                 else:
                     await short_url(client, message, base64_string)
                     return
-            else:
-                await short_url(client, message, base64_string)
-                return
 
-        # ── Bypass protection ────────────────────────────────────────────────
-        if basic.startswith("yu3elk") and not is_premium and not is_super_premium and user_id != OWNER_ID:
-            try:
-                pending = await db.get_pending_shortener(user_id, base64_string)
-            except Exception as e:
-                pending = None
-                print(f"[bypass] lookup failed: {e}")
-
-            if pending is None:
-                pass
-            elif pending.get('expired'):
-                await message.reply_text(
-                    "<blockquote>⏳ <b>ᴛʜɪs ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ʜᴀs ᴇxᴘɪʀᴇᴅ</b></blockquote>\n\n"
-                    "<blockquote>» ᴘʟᴇᴀꜱᴇ ᴅᴏɴ'ᴛ ᴜꜱᴇ ᴏʟᴅ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋꜱ, ᴋɪɴᴅʟʏ ʀᴇǫᴜᴇꜱᴛ ᴀ ɴᴇᴡ ᴏɴᴇ.</blockquote>\n",
-                    reply_markup=InlineKeyboardMarkup([
-                        [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
-                    ])
-                )
-                await short_url(client, message, base64_string)
-                return
-            else:
-                elapsed = time.time() - float(pending.get('sent_at', 0))
-                if elapsed < BYPASS_PROTECTION_SECONDS:
-                    await _handle_bypass_attempt(client, message, user_id, base64_string)
-                    return
+            # ── Bypass protection (Token Mode only) ──────────────────────────
+            if basic.startswith("yu3elk") and not is_premium and not is_super_premium and user_id != OWNER_ID:
                 try:
-                    await db.delete_pending(user_id, base64_string)
-                except Exception:
-                    pass
+                    pending = await db.get_pending_shortener(user_id, base64_string)
+                except Exception as e:
+                    pending = None
+                    print(f"[bypass] lookup failed: {e}")
 
-        # ── Track successful access + validate referral ──────────────────────
-        try:
-            if is_premium or is_super_premium or user_id == OWNER_ID:
-                await db.record_premium_access(user_id, base64_string)
-            elif basic.startswith("yu3elk"):
-                completed_idx = await db.consume_shortener_success(user_id)
-                if completed_idx >= 0:
-                    await db.increment_shortener_success(completed_idx)
+                if pending is None:
+                    pass
+                elif pending.get('expired'):
+                    await message.reply_text(
+                        "<blockquote>⏳ <b>ᴛʜɪs ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ʜᴀs ᴇxᴘɪʀᴇᴅ</b></blockquote>\n\n"
+                        "<blockquote>» ᴘʟᴇᴀꜱᴇ ᴅᴏɴ'ᴛ ᴜꜱᴇ ᴏʟᴅ ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋꜱ, ᴋɪɴᴅʟʏ ʀᴇǫᴜᴇꜱᴛ ᴀ ɴᴇᴡ ᴏɴᴇ.</blockquote>\n",
+                        reply_markup=InlineKeyboardMarkup([
+                            [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
+                        ])
+                    )
+                    await short_url(client, message, base64_string)
+                    return
+                else:
+                    elapsed = time.time() - float(pending.get('sent_at', 0))
+                    if elapsed < BYPASS_PROTECTION_SECONDS:
+                        await _handle_bypass_attempt(client, message, user_id, base64_string)
+                        return
                     try:
-                        await db.mark_shortener_used(user_id, completed_idx, hours=24)
-                    except Exception as cd_err:
-                        print(f"[cooldown] mark_shortener_used failed: {cd_err}")
-                    try:
-                        _vmode_grant = await db.get_verification_mode()
-                        if _vmode_grant == '12h':
-                            await db.grant_shortener_access(user_id, hours=12)
-                        elif _vmode_grant == '24h':
-                            await db.grant_shortener_access(user_id, hours=24)
-                    except Exception as vg_err:
-                        print(f"[vmode] grant_shortener_access failed: {vg_err}")
-                    try:
-                        cur = await db.get_verify_count(user_id)
-                        await db.set_verify_count(user_id, cur + 1)
+                        await db.delete_pending(user_id, base64_string)
                     except Exception:
                         pass
 
-                    # ── Referral validation: this user just completed their first shortener ──
-                    await _handle_referral_validation(client, user_id)
+            # ── Track successful access + validate referral (Token Mode) ──────
+            try:
+                if is_premium or is_super_premium or user_id == OWNER_ID:
+                    await db.record_premium_access(user_id, base64_string)
+                elif basic.startswith("yu3elk"):
+                    completed_idx = await db.consume_shortener_success(user_id)
+                    if completed_idx >= 0:
+                        await db.increment_shortener_success(completed_idx)
+                        try:
+                            await db.mark_shortener_used(user_id, completed_idx, hours=24)
+                        except Exception as cd_err:
+                            print(f"[cooldown] mark_shortener_used failed: {cd_err}")
+                        try:
+                            _vmode_grant = await db.get_verification_mode()
+                            if _vmode_grant == '12h':
+                                await db.grant_shortener_access(user_id, hours=12)
+                            elif _vmode_grant == '24h':
+                                await db.grant_shortener_access(user_id, hours=24)
+                        except Exception as vg_err:
+                            print(f"[vmode] grant_shortener_access failed: {vg_err}")
+                        try:
+                            cur = await db.get_verify_count(user_id)
+                            await db.set_verify_count(user_id, cur + 1)
+                        except Exception:
+                            pass
 
-        except Exception as track_err:
-            print(f"Tracking error (non-fatal): {track_err}")
+                        # ── Referral validation ──────────────────────────────
+                        await _handle_referral_validation(client, user_id)
+
+            except Exception as track_err:
+                print(f"Tracking error (non-fatal): {track_err}")
 
     except Exception as e:
         print(f"Error processing start payload: {e}")
