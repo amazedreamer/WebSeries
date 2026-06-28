@@ -1142,5 +1142,11 @@ class Rohit:
             upsert=True
         )
 
+    async def reset_all_free_access_counts(self):
+        """Reset the daily free-access counters for all users (Premium Mode).
+        Called by daily_reset_task at 00:00 IST so every user gets their
+        free slots back fresh each day."""
+        await self.user_free_access.delete_many({})
+
 
 db = Rohit(DB_URI, DB_NAME)
