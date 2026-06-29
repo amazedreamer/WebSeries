@@ -59,12 +59,12 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.postimg.cc/YCBcTNHW/Gemini-Ge
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "vplink.in")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "043e0ff560fd252f517f02e3e0b11d399b598eb9")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "liteshort.com")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
 
 # Shortener 2
-SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "")
-SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "")
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "papajiurl.com")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "0355de6df10e776db69f63f47931ff0d87a0cd50")
 
 # Shortener 3
 SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "")
@@ -218,10 +218,10 @@ PRICE5 = os.environ.get("PRICE4", "999")
 
 # Super Premium Prices
 PRICE_SP_1 = os.environ.get("PRICE_SP_1", "₹ 20")
-PRICE_SP_2 = os.environ.get("PRICE_SP_2", "₹ 100")
-PRICE_SP_3 = os.environ.get("PRICE_SP_3", "₹ 199")
-PRICE_SP_4 = os.environ.get("PRICE_SP_4", "₹ 269")
-PRICE_SP_5 = os.environ.get("PRICE_SP_4", "₹ 999")
+PRICE_SP_2 = os.environ.get("PRICE_SP_2", "₹ 20")
+PRICE_SP_3 = os.environ.get("PRICE_SP_3", "₹ 100")
+PRICE_SP_4 = os.environ.get("PRICE_SP_4", "₹ 199")
+PRICE_SP_5 = os.environ.get("PRICE_SP_4", "₹ 269")
 
 # Plan definitions (used by buy-premium flow to generate QR + buttons)
 # key format: np_<id> for normal, sp_<id> for super
@@ -232,10 +232,10 @@ NORMAL_PLANS = [
     {"key": "np_3", "label": "𝟶2 ᴍᴏɴᴛʜs",  "days": 60, "price_str": PRICE4},
 ]
 SUPER_PLANS = [
-    {"key": "sp_1", "label": "𝟶𝟷 ᴅᴀʏ",   "days": 1,  "price_str": PRICE_SP_2},
-    {"key": "sp_2", "label": "15 ᴅᴀʏs",  "days": 15,  "price_str": PRICE_SP_3},
-    {"key": "sp_3", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30, "price_str": PRICE_SP_4},
-    {"key": "sp_4", "label": "𝟶2 ᴍᴏɴᴛʜs",    "days": 60, "price_str": PRICE_SP_5},
+    {"key": "sp_2", "label": "𝟶𝟷 ᴅᴀʏ",   "days": 1,  "price_str": PRICE_SP_2},
+    {"key": "sp_3", "label": "15 ᴅᴀʏs",  "days": 15,  "price_str": PRICE_SP_3},
+    {"key": "sp_4", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30, "price_str": PRICE_SP_4},
+    {"key": "sp_5", "label": "𝟶2 ᴍᴏɴᴛʜs",    "days": 60, "price_str": PRICE_SP_5},
 ]
 
 ALL_PLANS = {p["key"]: p for p in NORMAL_PLANS + SUPER_PLANS}
