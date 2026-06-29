@@ -286,7 +286,6 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             f"<blockquote>» ᴀᴍᴏᴜɴᴛ: <b>₹{amount}</b> (ᴇxᴀᴄᴛ — ᴅᴏ ɴᴏᴛ ᴄʜᴀɴɢᴇ)</blockquote>\n"
             f"<blockquote>» ᴏʀᴅᴇʀ ɪᴅ: <code>{order_id}</code></blockquote>\n\n"
             f"<blockquote>📱 sᴄᴀɴ ᴡɪᴛʜ ᴀɴʏ ᴜᴘɪ ᴀᴘᴘ (Paytm / GPay / PhonePe).\n"
-            f"ᴛʜᴇ ᴀᴍᴏᴜɴᴛ ɪs ᴘʀᴇ-ꜰɪʟʟᴇᴅ — ᴅᴏ ɴᴏᴛ ᴄʜᴀɴɢᴇ ɪᴛ.</blockquote>\n"
             f"<blockquote>» ᴜᴘɪ ɪᴅ: <code>{UPI_ID}</code></blockquote>\n\n"
             f"<blockquote expandable>⚡ ᴘʟᴀɴ ᴀᴄᴛɪᴠᴀᴛᴇs ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ.\n"
             f"ɪꜰ ɴᴏᴛ ᴀᴄᴛɪᴠᴀᴛᴇᴅ ᴡɪᴛʜɪɴ 1-2 ᴍɪɴs, ᴛᴀᴘ <b>ɪ ʜᴀᴠᴇ ᴘᴀɪᴅ</b>.\n"
