@@ -28,20 +28,20 @@ def small_caps(text):
 # rohit_1888 on Tg
 # --------------------------------------------
 # Bot token @Botfather
-TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8908606968:AAGtaJWpk-7sS4h59UeHwGV-Ql5HyF5w2JU")
-APP_ID = int(os.environ.get("APP_ID", "30279772"))  # Your API ID from my.telegram.org
-API_HASH = os.environ.get("API_HASH", "39170e11beedd62bb1534a55bfc53ea2")  # Your API Hash from my.telegram.org
+TG_BOT_TOKEN = os.environ.get("TG_BOT_TOKEN", "8696141483:AAEHiddJRog9uGfpdezEqm3qRHnYwu9vEm8")
+APP_ID = int(os.environ.get("APP_ID", "27570787"))  # Your API ID from my.telegram.org
+API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39")  # Your API Hash from my.telegram.org
 # --------------------------------------------
 
-CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1004450452379"))  # Your db channel Id
+CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003769628273"))  # Your db channel Id
 OWNER = os.environ.get("OWNER", "shrutiix")  # Owner username without @
 OWNER_ID = int(os.environ.get("OWNER_ID", "8714830622"))  # Owner id
 # --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
 # --------------------------------------------
-DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://urvashiix:dThGnaimQESSvwFT@urvashiix.evuqrai.mongodb.net/?appName=urvashiix")
-DB_NAME = os.environ.get("DATABASE_NAME", "PromoCHBot")
+DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://sameerpandey1:k9TPWFNg2jK4PDET@cluster0.5ge2hgy.mongodb.net/?appName=Cluster0")
+DB_NAME = os.environ.get("DATABASE_NAME", "OnlyFapsFileShareBot")
 # --------------------------------------------
 FSUB_LINK_EXPIRY = int(os.getenv("FSUB_LINK_EXPIRY", "3000"))  # 0 means no expiry
 BAN_SUPPORT = os.environ.get("BAN_SUPPORT", "https://t.me/ToxicXAdminRoBot")
@@ -59,24 +59,24 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.postimg.cc/YCBcTNHW/Gemini-Ge
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "liteshort.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "caslinks.com")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "fa3bc3a503135dd51ae90cd8373b15890108a720")
 
 # Shortener 2
-SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "papajiurl.com")
-SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "0355de6df10e776db69f63f47931ff0d87a0cd50")
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "urllinkshort.in")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "f06d773b5855747d387da0b37c28c963a142d808")
 
 # Shortener 3
-SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "")
-SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "")
+SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "lnkbit.fyi")
+SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "7b4403586321591da282c6bc5f8a40f9de7675d0")
 
 # Shortener 4
-SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "")
-SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "")
+SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "bestcash2020.com")
+SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "684d2894b46824b5ce609d1502ebafa2b76ed39c")
 
 # Shortener 5
-SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "")
-SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "")
+SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "urlking.in")
+SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "b01dc237ad6256753e4c58aa1e245d1831ab9349")
 
 # Shortener 6
 SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "")
