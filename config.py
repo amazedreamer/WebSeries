@@ -34,8 +34,8 @@ API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39")  # You
 # --------------------------------------------
 
 CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003769628273"))  # Your db channel Id
-OWNER = os.environ.get("OWNER", "shrutiix")  # Owner username without @
-OWNER_ID = int(os.environ.get("OWNER_ID", "8714830622"))  # Owner id
+OWNER = os.environ.get("OWNER", "sakxxii")  # Owner username without @
+OWNER_ID = int(os.environ.get("OWNER_ID", "8584220782"))  # Owner id
 # --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
@@ -169,7 +169,7 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇꜰᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TheToxicMeme</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TheToxicXMeme</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
@@ -197,7 +197,7 @@ PAYMENT_VERIFY_INTERVAL = int(os.environ.get("PAYMENT_VERIFY_INTERVAL", "120")) 
 PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "15"))   # order expiry
 AMOUNT_TOLERANCE        = float(os.environ.get("AMOUNT_TOLERANCE",      "2"))    # ₹ tolerance
 # Channel where successful payment receipts are logged (defaults to DB channel)
-PAYMENT_LOG_CHANNEL_ID  = int(os.environ.get("PAYMENT_LOG_CHANNEL_ID",  "-1004450452379"))
+PAYMENT_LOG_CHANNEL_ID  = int(os.environ.get("PAYMENT_LOG_CHANNEL_ID",  "-1003270558605"))
 
 # Legacy static QR pic — kept for fallback only; dynamic QR is used by default.
 QR_PIC          = os.environ.get("QR_PIC",          "")
