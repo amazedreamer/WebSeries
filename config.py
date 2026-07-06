@@ -59,8 +59,8 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.postimg.cc/YCBcTNHW/Gemini-Ge
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "caslinks.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "fa3bc3a503135dd51ae90cd8373b15890108a720")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "alpha-links.in")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "483cba84c70761bfb95ec7a528478b00c348c41f")
 
 # Shortener 2
 SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "urllinkshort.in")
