@@ -169,7 +169,7 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇꜰᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TheToxicXMeme</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powered by @TheToxicXMeme</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
@@ -192,7 +192,7 @@ PAYTM_MID       = os.environ.get("PAYTM_MID",       "PKNtOC25387320837859")   # 
 # The Vercel API wraps Paytm's transaction-status API.
 # URL format: GET PAYMENT_API_URL?mid=<MID>&oid=<order_id>
 # Returns JSON with STATUS, ORDERID, TXNAMOUNT, TXNID, BANKTXNID, TXNDATE.
-PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://pay-api-master.vercel.app/")
+PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://pay-rho-seven.vercel.app/")
 PAYMENT_VERIFY_INTERVAL = int(os.environ.get("PAYMENT_VERIFY_INTERVAL", "120"))  # secs between polls
 PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "15"))   # order expiry
 AMOUNT_TOLERANCE        = float(os.environ.get("AMOUNT_TOLERANCE",      "2"))    # ₹ tolerance
