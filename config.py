@@ -63,8 +63,8 @@ SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "liteshort.com")
 SHORTLINK_API = os.environ.get("SHORTLINK_API", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
 
 # Shortener 2
-SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "short-pay.xyz")
-SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "c3c8be6b4d487afbafeaf878e452f6572217692d")
+SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "")
+SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "")
 
 # Shortener 3
 SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "urlking.in")
@@ -206,22 +206,22 @@ SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/ToxicXAdminRoBot")
 # --------------------------------------------
 # Time and its price
 # 10 Days
-PRICE1 = os.environ.get("PRICE1", "₹ 10")
+PRICE1 = os.environ.get("PRICE1", "₹ 50")
 # 1 Month
-PRICE2 = os.environ.get("PRICE2", "₹ 50")
+PRICE2 = os.environ.get("PRICE2", "₹ 100")
 # 3 Month
-PRICE3 = os.environ.get("PRICE3", "₹ 100")
+PRICE3 = os.environ.get("PRICE3", "₹ 130")
 # 6 Month
-PRICE4 = os.environ.get("PRICE4", "₹ 169")
+PRICE4 = os.environ.get("PRICE4", "₹ 200")
 
-PRICE5 = os.environ.get("PRICE4", "999")
+PRICE5 = os.environ.get("PRICE4", "₹ 999")
 
 # Super Premium Prices
-PRICE_SP_1 = os.environ.get("PRICE_SP_1", "₹ 20")
-PRICE_SP_2 = os.environ.get("PRICE_SP_2", "₹ 20")
-PRICE_SP_3 = os.environ.get("PRICE_SP_3", "₹ 100")
-PRICE_SP_4 = os.environ.get("PRICE_SP_4", "₹ 199")
-PRICE_SP_5 = os.environ.get("PRICE_SP_4", "₹ 269")
+PRICE_SP_1 = os.environ.get("PRICE_SP_1", "₹ 80")
+PRICE_SP_2 = os.environ.get("PRICE_SP_2", "₹ 80")
+PRICE_SP_3 = os.environ.get("PRICE_SP_3", "₹ 180")
+PRICE_SP_4 = os.environ.get("PRICE_SP_4", "₹ 250")
+PRICE_SP_5 = os.environ.get("PRICE_SP_5", "₹ 350")
 
 # Plan definitions (used by buy-premium flow to generate QR + buttons)
 # key format: np_<id> for normal, sp_<id> for super
