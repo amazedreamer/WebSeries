@@ -114,21 +114,46 @@ BYPASS_PROTECTION_SECONDS = int(os.environ.get("BYPASS_PROTECTION_SECONDS", "90"
 SHORT_MSG_AUTO_DELETE_SECONDS   = int(os.environ.get("SHORT_MSG_AUTO_DELETE_SECONDS",   "1200"))  # 20 min
 PREMIUM_MSG_AUTO_DELETE_SECONDS = int(os.environ.get("PREMIUM_MSG_AUTO_DELETE_SECONDS", "1200"))  # 20 min
 # ============================================================================
-
-TUT_VID = os.environ.get("TUT_VID", "https://t.me/TheToxicMeme/6")
+ 
+TUT_VID = os.environ.get("TUT_VID", "https://t.me/HowToOpenTheseLinks")
 SHORT_MSG = (
     f"<blockquote>✨ <b>{small_caps('ʟɪɴᴋ ɢᴇɴᴇʀᴀᴛᴇᴅ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ɪꜰ ɪᴛꜱ ʏᴏᴜʀ ꜰɪʀꜱᴛ ᴛɪᴍᴇ ʜᴇʀᴇ, ᴋɪɴᴅʟʏ ᴡᴀᴛᴄʜ ᴛʜᴇ ᴛᴜᴛᴏʀɪᴀʟ ʙᴇꜰᴏʀᴇ ᴘʀᴏᴄᴇᴇᴅɪɴɢ.')}</blockquote>"
 )
-
+ 
 SHORTENER_PIC = os.environ.get("SHORTENER_PIC", "https://i.ibb.co/8ggPBWDS/Gemini-Generated-Image-6ow8rn6ow8rn6ow8.png")
 # --------------------------------------------
-
+ 
+# === PREMIUM ACCESS MODE MESSAGES ===========================================
+# Shown instead of SHORT_MSG whenever the bot's access mode is set to
+# 💎 Premium and the requesting user is not premium.
+#
+# PREMIUM_ONLY_MSG   -> free limit is 0 (/free 0) — strict premium-only bot,
+#                       no free access is granted at all.
+# PREMIUM_LIMIT_MSG  -> free limit is > 0 and the user has used it all up.
+PREMIUM_ONLY_MSG = (
+    f"<blockquote>🔞💎 <b>{small_caps('ᴘʀᴇᴍɪᴜᴍ ᴍᴇᴍʙᴇʀs ᴏɴʟʏ')}</b></blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴛʜɪs ᴄᴏʟʟᴇᴄᴛɪᴏɴ ɪs ʟᴏᴄᴋᴇᴅ ʙᴇʜɪɴᴅ ᴘʀᴇᴍɪᴜᴍ ʀɪɢʜᴛ ɴᴏᴡ')} — "
+    f"{small_caps('ɴᴏ ꜰʀᴇᴇ ᴘʀᴇᴠɪᴇᴡs ᴀʀᴇ ᴀᴠᴀɪʟᴀʙʟᴇ.')}</blockquote>\n"
+    f"<blockquote>{small_caps('ɢʀᴀʙ ᴀ ᴘʟᴀɴ ʙᴇʟᴏᴡ ᴀɴᴅ ɢᴇᴛ ɪɴsᴛᴀɴᴛ ᴀᴄᴄᴇss.')}</blockquote>\n\n"
+    f"<blockquote>💎 <b>{small_caps('ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ')}</b> — {small_caps('ᴢᴇʀᴏ ᴀᴅs, ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss')}\n"
+    f"🚀 <b>{small_caps('sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ')}</b> — {small_caps('ᴜɴʟɪᴍɪᴛᴇᴅ + ᴄᴏᴘʏ/ꜰᴏʀᴡᴀʀᴅ ᴇɴᴀʙʟᴇᴅ')}</blockquote>"
+)
+ 
+PREMIUM_LIMIT_MSG = (
+    f"<blockquote>💎 <b>{small_caps('ꜰʀᴇᴇ ᴀᴄᴄᴇss ᴇxʜᴀᴜsᴛᴇᴅ')}</b></blockquote>\n\n"
+    f"<blockquote>ʏᴏᴜ'ᴠᴇ ᴜsᴇᴅ ᴀʟʟ <b>{{limit}}</b> ᴏꜰ ʏᴏᴜʀ ꜰʀᴇᴇ ᴀᴄᴄᴇss sʟᴏᴛs.</blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ɢᴇᴛᴛɪɴɢ ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇs, ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ:')}</blockquote>\n"
+    f"<blockquote>💎 <b>{small_caps('ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ')}</b> — {small_caps('ᴢᴇʀᴏ ᴀᴅs, ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss')}\n"
+    f"🚀 <b>{small_caps('sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ')}</b> — {small_caps('ᴜɴʟɪᴍɪᴛᴇᴅ + ᴄᴏᴘʏ/ꜰᴏʀᴡᴀʀᴅ ᴇɴᴀʙʟᴇᴅ')}</blockquote>"
+)
 # --------------------------------------------
-HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheToxicMeme\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicMeme>The Toxic Meme</a></blockquote></b>"
+ 
+# --------------------------------------------
+HELP_TXT = "<b><blockquote>ɪ ᴀᴍ ᴀ ʙᴏᴛ ᴡᴏʀᴋ ғᴏʀ @TheToxicXMeme\n\n❏ ʙᴏᴛ ᴄᴏᴍᴍᴀɴᴅs\n├/start : sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ\n├/about : ᴏᴜʀ Iɴғᴏʀᴍᴀᴛɪᴏɴ\n└/help : ʜᴇʟᴘ ʀᴇʟᴀᴛᴇᴅ ʙᴏᴛ\n\n sɪᴍᴘʟʏ ᴄʟɪᴄᴋ ᴏɴ ʟɪɴᴋ ᴀɴᴅ sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ ᴊᴏɪɴ ʙᴏᴛʜ ᴄʜᴀɴɴᴇʟs ᴀɴᴅ ᴛʀʏ ᴀɢᴀɪɴ ᴛʜᴀᴛs ɪᴛ.....!\n\n ᴅᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ <a href=https://t.me/TheToxicXMeme>The Toxic Meme</a></blockquote></b>"
 ABOUT_TXT = (
     f"<blockquote>ℹ️ <b>{small_caps('sʏsᴛᴇᴍ ɪɴғᴏʀᴍᴀᴛɪᴏɴ')}</b></blockquote>\n\n"
-    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheToxicMeme</blockquote>\n\n"
+    f"<blockquote>{small_caps('ᴀᴅᴠᴀɴᴄᴇᴅ ᴄᴏɴᴛᴇɴᴛ ᴅᴇʟɪᴠᴇʀʏ sʏsᴛᴇᴍ ᴏᴘᴇʀᴀᴛɪɴɢ ғᴏʀ')} @TheToxicXMeme</blockquote>\n\n"
     f"<blockquote>👑 <b>{small_caps('ᴅᴇᴠᴇʟᴏᴘᴇʀ')}</b> — <a href='https://t.me/ToxicXAdminRoBot'>{small_caps('ᴀᴅᴍɪɴ sᴜᴘᴘᴏʀᴛ')}</a></blockquote>"
 )
 # --------------------------------------------
@@ -138,15 +163,15 @@ START_MSG = (
     f"<blockquote>{small_caps('ʜɪ')} {{mention}}, {small_caps('ɪ ᴀᴍ ᴛʜᴇ ᴏғғɪᴄɪᴀʟ ᴀssɪsᴛᴀɴᴛ ғᴏʀ')} @TheToxicMeme</blockquote>\n"
     f"<blockquote>{small_caps('ᴜsᴇ ᴛʜᴇ ᴍᴇɴᴜ ʙᴇʟᴏᴡ ᴛᴏ ᴇxᴘʟᴏʀᴇ ᴏᴜʀ ᴄᴏʟʟᴇᴄᴛɪᴏɴ.')}</blockquote>"
 )
-
+ 
 FORCE_MSG = (
     f"<blockquote>🔒 <b>{small_caps('ᴀᴄᴄᴇss ʀᴇsᴛʀɪᴄᴛᴇᴅ')}</b></blockquote>\n\n"
     f"<blockquote>{small_caps('ʜᴇʟʟᴏ')} {{mention}}, {small_caps('ᴘʟᴇᴀsᴇ ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs ʙᴇʟᴏᴡ ᴛᴏ ᴜɴʟᴏᴄᴋ ᴄᴏɴᴛᴇɴᴛ.')}</blockquote>\n"
     f"<blockquote>{small_caps('ᴛᴀᴘ ʀᴇʟᴏᴀᴅ ᴏɴᴄᴇ ʏᴏᴜ ʜᴀᴠᴇ ᴊᴏɪɴᴇᴅ.')}</blockquote>"
 )
-
+ 
 CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockquote>
-
+ 
 <b>›› /dlt_time :</b> sᴇᴛ ᴀᴜᴛᴏ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇ
 <b>›› /check_dlt_time :</b> ᴄʜᴇᴄᴋ ᴄᴜʀʀᴇɴᴛ ᴅᴇʟᴇᴛᴇ ᴛɪᴍᴇ
 <b>›› /dbroadcast :</b> ʙʀᴏᴀᴅᴄᴀsᴛ ᴅᴏᴄᴜᴍᴇɴᴛ / ᴠɪᴅᴇᴏ
@@ -169,14 +194,14 @@ CMD_TXT = """<blockquote><b>» ᴀᴅᴍɪɴ ᴄᴏᴍᴍᴀɴᴅs:</b></blockqu
 <b>›› /delreq :</b> Rᴇᴍᴏᴠᴇᴅ ʟᴇꜰᴛᴏᴠᴇʀ ɴᴏɴ-ʀᴇǫᴜᴇsᴛ ᴜsᴇʀs
 """
 # --------------------------------------------
-CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powered by @TheToxicXMeme</b>")
+CUSTOM_CAPTION = os.environ.get("CUSTOM_CAPTION", "<b>• powerd by @TheToxicXMeme</b>")
 PROTECT_CONTENT = True if os.environ.get('PROTECT_CONTENT', "True") == "True" else False
 # --------------------------------------------
 DISABLE_CHANNEL_BUTTON = os.environ.get("DISABLE_CHANNEL_BUTTON", None) == 'False'
 # --------------------------------------------
 BOT_STATS_TEXT = f"<blockquote>⏳ <b>{small_caps('sʏsᴛᴇᴍ ᴜᴘᴛɪᴍᴇ')}</b>\n{{uptime}}</blockquote>"
 USER_REPLY_TEXT = f"<blockquote>⛔ <b>{small_caps('ᴀᴄᴄᴇss ᴅᴇɴɪᴇᴅ')}</b>\n{small_caps('ᴀᴅᴍɪɴ ᴘʀɪᴠɪʟᴇɢᴇs ʀᴇǫᴜɪʀᴇᴅ.')}</blockquote>"
-
+ 
 # ==========================(BUY PREMIUM)====================#
 
 OWNER_TAG = os.environ.get("OWNER_TAG", "ToxicXAdminRoBot")
