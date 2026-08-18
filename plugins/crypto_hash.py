@@ -185,7 +185,7 @@ BOT_MODE_INFO = {
     },
     'premium': {
         'label': '💎 ᴘʀᴇᴍɪᴜᴍ',
-        'description': 'N ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱᴇꜱ ᴛʜᴇɴ ᴘʀᴇᴍɪᴜᴍ ʀᴇǫᴜɪʀᴇᴅ (/free N ᴛᴏ sᴇᴛ)',
+        'description': 'N ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱᴇꜱ ᴛʜᴇɴ ᴘʀᴇᴍɪᴜᴍ ʀᴇǫᴜɪʀᴇᴅ · /free 0 = ᴘʀᴇᴍɪᴜᴍ ᴏɴʟʏ (/free N ᴛᴏ sᴇᴛ)',
     },
 }
 
@@ -404,16 +404,24 @@ async def set_free_limit_cmd(client: Client, message: Message):
     """Admin command: /free <N> — set the free access limit for Premium Mode."""
     try:
         limit = int(message.command[1])
-        if limit < 1:
-            raise ValueError("Limit must be ≥ 1")
+        if limit < 0:
+            raise ValueError("Limit must be ≥ 0")
         await db.set_premium_mode_free_limit(limit)
-        await message.reply(
-            f"<blockquote>✅ ꜰʀᴇᴇ ᴀᴄᴄᴇss ʟɪᴍɪᴛ sᴇᴛ ᴛᴏ <b>{limit}</b> ꜰɪʟᴇs ᴘᴇʀ ᴜsᴇʀ.</blockquote>\n"
-            f"<blockquote>ᴛʜɪs ᴀᴘᴘʟɪᴇs ᴡʜᴇɴ ʙᴏᴛ ᴍᴏᴅᴇ ɪs 💎 ᴘʀᴇᴍɪᴜᴍ.</blockquote>"
-        )
+        if limit == 0:
+            await message.reply(
+                f"<blockquote>✅ ꜰʀᴇᴇ ᴀᴄᴄᴇss ʟɪᴍɪᴛ sᴇᴛ ᴛᴏ <b>0</b> — ᴘʀᴇᴍɪᴜᴍ ᴏɴʟʏ.</blockquote>\n"
+                f"<blockquote>ɴᴏɴ-ᴘʀᴇᴍɪᴜᴍ ᴜsᴇʀs ᴡɪʟʟ ɴᴏᴡ ʙᴇ ᴀsᴋᴇᴅ ᴛᴏ ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ ɪᴍᴍᴇᴅɪᴀᴛᴇʟʏ.</blockquote>\n"
+                f"<blockquote>ᴛʜɪs ᴀᴘᴘʟɪᴇs ᴡʜᴇɴ ʙᴏᴛ ᴍᴏᴅᴇ ɪs 💎 ᴘʀᴇᴍɪᴜᴍ.</blockquote>"
+            )
+        else:
+            await message.reply(
+                f"<blockquote>✅ ꜰʀᴇᴇ ᴀᴄᴄᴇss ʟɪᴍɪᴛ sᴇᴛ ᴛᴏ <b>{limit}</b> ꜰɪʟᴇs ᴘᴇʀ ᴜsᴇʀ.</blockquote>\n"
+                f"<blockquote>ᴛʜɪs ᴀᴘᴘʟɪᴇs ᴡʜᴇɴ ʙᴏᴛ ᴍᴏᴅᴇ ɪs 💎 ᴘʀᴇᴍɪᴜᴍ.</blockquote>"
+            )
     except (IndexError, ValueError):
         current = await db.get_premium_mode_free_limit()
         await message.reply(
             f"<blockquote>📋 <b>ᴜsᴀɢᴇ:</b> <code>/free &lt;ɴᴜᴍʙᴇʀ&gt;</code></blockquote>\n"
+            f"<blockquote>sᴇᴛ ᴛᴏ <b>0</b> ꜰᴏʀ ᴘʀᴇᴍɪᴜᴍ-ᴏɴʟʏ (ɴᴏ ꜰʀᴇᴇ ᴀᴄᴄᴇss ᴀᴛ ᴀʟʟ).</blockquote>\n"
             f"<blockquote>ᴄᴜʀʀᴇɴᴛ ʟɪᴍɪᴛ: <b>{current}</b> ꜰɪʟᴇs ᴘᴇʀ ᴜsᴇʀ</blockquote>"
         )
