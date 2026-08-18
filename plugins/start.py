@@ -389,16 +389,16 @@ async def start_command(client: Client, message: Message):
             else:
                 free_limit = await db.get_premium_mode_free_limit()
                 free_used = await db.get_user_free_access_count(user_id)
-                if free_used < free_limit:
+                if free_limit > 0 and free_used < free_limit:
                     await db.increment_user_free_access(user_id)
                     # fall through to serve file
                 else:
+                    # free_limit == 0  -> bot is strict "premium only" (no free
+                    #                     access is ever granted, /free 0)
+                    # free_limit > 0   -> user has used up all their free slots
+                    text = PREMIUM_ONLY_MSG if free_limit <= 0 else PREMIUM_LIMIT_MSG.format(limit=free_limit)
                     await message.reply_text(
-                        "<blockquote>💎 <b>ꜰʀᴇᴇ ᴀᴄᴄᴇss ᴇxʜᴀᴜsᴛᴇᴅ</b></blockquote>\n\n"
-                        f"<blockquote>ʏᴏᴜ'ᴠᴇ ᴜꜱᴇᴅ ᴀʟʟ <b>{free_limit}</b> ᴏꜰ ʏᴏᴜʀ ꜰʀᴇᴇ ᴀᴄᴄᴇꜱꜱ sʟᴏᴛs.</blockquote>\n\n"
-                        "<blockquote>ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ ɢᴇᴛᴛɪɴɢ ᴜɴʟɪᴍɪᴛᴇᴅ ꜰɪʟᴇs, ᴜᴘɢʀᴀᴅᴇ ᴛᴏ ᴘʀᴇᴍɪᴜᴍ:</blockquote>\n"
-                        "<blockquote>💎 <b>ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ</b> — ᴢᴇʀᴏ ᴀᴅs, ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇss\n"
-                        "🚀 <b>sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ</b> — ᴜɴʟɪᴍɪᴛᴇᴅ + ᴄᴏᴘʏ/ꜰᴏʀᴡᴀʀᴅ ᴇɴᴀʙʟᴇᴅ</blockquote>",
+                        text,
                         reply_markup=InlineKeyboardMarkup([
                             [InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ", callback_data="premium")],
                             [InlineKeyboardButton("🎁 ʀᴇꜰᴇʀ & ᴇᴀʀɴ ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ", callback_data="free_premium")],
