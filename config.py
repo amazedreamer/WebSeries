@@ -244,20 +244,20 @@ PRICE5 = os.environ.get("PRICE4", "₹ 999")
 # Super Premium Prices
 PRICE_SP_1 = os.environ.get("PRICE_SP_1", "₹ 80")
 PRICE_SP_2 = os.environ.get("PRICE_SP_2", "₹ 80")
-PRICE_SP_3 = os.environ.get("PRICE_SP_3", "₹ 180")
-PRICE_SP_4 = os.environ.get("PRICE_SP_4", "₹ 250")
-PRICE_SP_5 = os.environ.get("PRICE_SP_5", "₹ 350")
+PRICE_SP_3 = os.environ.get("PRICE_SP_3", "₹ 130")
+PRICE_SP_4 = os.environ.get("PRICE_SP_4", "₹ 200")
+PRICE_SP_5 = os.environ.get("PRICE_SP_5", "₹ 300")
 
 # Plan definitions (used by buy-premium flow to generate QR + buttons)
 # key format: np_<id> for normal, sp_<id> for super
 NORMAL_PLANS = [
-    {"key": "np_0", "label": "𝟷 ᴅᴀʏ",    "days": 1,  "price_str": PRICE1},
+    {"key": "np_0", "label": "7 ᴅᴀʏ",    "days": 7,  "price_str": PRICE1},
     {"key": "np_1", "label": "15 ᴅᴀʏs",   "days": 15,  "price_str": PRICE2},
     {"key": "np_2", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30,  "price_str": PRICE3},
     {"key": "np_3", "label": "𝟶2 ᴍᴏɴᴛʜs",  "days": 60, "price_str": PRICE4},
 ]
 SUPER_PLANS = [
-    {"key": "sp_2", "label": "𝟶𝟷 ᴅᴀʏ",   "days": 1,  "price_str": PRICE_SP_2},
+    {"key": "sp_2", "label": "7 ᴅᴀʏ",   "days": 7,  "price_str": PRICE_SP_2},
     {"key": "sp_3", "label": "15 ᴅᴀʏs",  "days": 15,  "price_str": PRICE_SP_3},
     {"key": "sp_4", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30, "price_str": PRICE_SP_4},
     {"key": "sp_5", "label": "𝟶2 ᴍᴏɴᴛʜs",    "days": 60, "price_str": PRICE_SP_5},
