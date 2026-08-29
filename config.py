@@ -217,7 +217,7 @@ PAYTM_MID       = os.environ.get("PAYTM_MID",       "PKNtOC25387320837859")   # 
 # The Vercel API wraps Paytm's transaction-status API.
 # URL format: GET PAYMENT_API_URL?mid=<MID>&oid=<order_id>
 # Returns JSON with STATUS, ORDERID, TXNAMOUNT, TXNID, BANKTXNID, TXNDATE.
-PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://paytm-payment-api-v2.vercel.app/7f8c9e1a3b5d2f4e6a8b0c1d3e5f7a9b2c4d6e8f0a1b3c5d7e9f1a3b5c7d9e1f")
+PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://paytm-3b6fa57ab6ab.herokuapp.com/")
 PAYMENT_VERIFY_INTERVAL = int(os.environ.get("PAYMENT_VERIFY_INTERVAL", "120"))  # secs between polls
 PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "15"))   # order expiry
 AMOUNT_TOLERANCE        = float(os.environ.get("AMOUNT_TOLERANCE",      "2"))    # ₹ tolerance
@@ -231,11 +231,11 @@ SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/ToxicXAdminRoBot")
 # --------------------------------------------
 # Time and its price
 # 10 Days
-PRICE1 = os.environ.get("PRICE1", "₹ 1")
+PRICE1 = os.environ.get("PRICE1", "₹ 50")
 # 1 Month
-PRICE2 = os.environ.get("PRICE2", "₹ 100")
+PRICE2 = os.environ.get("PRICE2", "₹ 90")
 # 3 Month
-PRICE3 = os.environ.get("PRICE3", "₹ 130")
+PRICE3 = os.environ.get("PRICE3", "₹ 140")
 # 6 Month
 PRICE4 = os.environ.get("PRICE4", "₹ 200")
 
@@ -251,7 +251,7 @@ PRICE_SP_5 = os.environ.get("PRICE_SP_5", "₹ 300")
 # Plan definitions (used by buy-premium flow to generate QR + buttons)
 # key format: np_<id> for normal, sp_<id> for super
 NORMAL_PLANS = [
-    {"key": "np_0", "label": "1 ᴅᴀʏ",    "days": 1,  "price_str": PRICE1},
+    {"key": "np_0", "label": "7 ᴅᴀʏ",    "days": 7,  "price_str": PRICE1},
     {"key": "np_1", "label": "15 ᴅᴀʏs",   "days": 15,  "price_str": PRICE2},
     {"key": "np_2", "label": "𝟶1 ᴍᴏɴᴛʜ",  "days": 30,  "price_str": PRICE3},
     {"key": "np_3", "label": "𝟶2 ᴍᴏɴᴛʜs",  "days": 60, "price_str": PRICE4},
