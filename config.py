@@ -59,28 +59,28 @@ FORCE_PIC = os.environ.get("FORCE_PIC", "https://i.postimg.cc/YCBcTNHW/Gemini-Ge
 # =============================================
 
 # Shortener 1 (primary / existing)
-SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "liteshort.com")
-SHORTLINK_API = os.environ.get("SHORTLINK_API", "3872aef59e2371b1a6db2155cfa6c7a18aa08d64")
+SHORTLINK_URL = os.environ.get("SHORTLINK_URL", "babylinks.in")
+SHORTLINK_API = os.environ.get("SHORTLINK_API", "27cd9c334bdc5e40c4c2af6a5201867836ef49ac")
 
 # Shortener 2
 SHORTLINK_URL_2 = os.environ.get("SHORTLINK_URL_2", "")
 SHORTLINK_API_2 = os.environ.get("SHORTLINK_API_2", "")
 
 # Shortener 3
-SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "urlking.in")
-SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "b01dc237ad6256753e4c58aa1e245d1831ab9349")
+SHORTLINK_URL_3 = os.environ.get("SHORTLINK_URL_3", "urllinkshort.in")
+SHORTLINK_API_3 = os.environ.get("SHORTLINK_API_3", "f06d773b5855747d387da0b37c28c963a142d808")
 
 # Shortener 4
-SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "lnkbit.fyi")
-SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "7b4403586321591da282c6bc5f8a40f9de7675d0")
+SHORTLINK_URL_4 = os.environ.get("SHORTLINK_URL_4", "arolinks.com")
+SHORTLINK_API_4 = os.environ.get("SHORTLINK_API_4", "3c41df8026a8c7adff4a7f801b47da074ff992cb")
 
 # Shortener 5
 SHORTLINK_URL_5 = os.environ.get("SHORTLINK_URL_5", "")
 SHORTLINK_API_5 = os.environ.get("SHORTLINK_API_5", "")
 
 # Shortener 6
-SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "bestcash2020.com")
-SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "684d2894b46824b5ce609d1502ebafa2b76ed39c")
+SHORTLINK_URL_6 = os.environ.get("SHORTLINK_URL_6", "get2short.com")
+SHORTLINK_API_6 = os.environ.get("SHORTLINK_API_6", "20a4eff7f94bf5fb5d83e98eeab5616f868bb4dc")
 
 # Build list of active shorteners (those where both URL and API are non-empty)
 SHORTLINK_PROVIDERS = []
