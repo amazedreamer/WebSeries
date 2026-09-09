@@ -207,9 +207,9 @@ async def get_shortlink_for_user(user_id: int, long_url: str):
     with a per-user, per-slot 24-hour cooldown.
 
     Behaviour:
-    - The bot serves the next available shortener slot (1 → 2 → ... → N),
-      sticking to it until the user successfully completes it (returns
-      via the yu3elk callback, which calls db.consume_shortener_success).
+     - The bot serves the next available shortener slot (1 → 2 → ... → N),
+       sticking to it until the user successfully completes it and returns
+       through the matching secure Telegram session.
     - On success, that EXACT slot is locked for THIS user for 24 hours.
       Future requests skip cooldowned slots and serve the next one.
     - The 24h cooldown does NOT reset at 00:00 IST — only the daily
@@ -248,9 +248,15 @@ async def get_shortlink_for_user(user_id: int, long_url: str):
 async def create_masked_link(target_url: str) -> str:
     """Generate a hashed masked link for the given target URL."""
     from plugins.crypto_hash import generate_hash_id
-    from config import BASE_URL, LOGGER
+    from config import BASE_URL, LOGGER, SECURE_GATE_MODE
 
     try:
+        # In Telegram mode the shortener URL itself is the public link. Do not
+        # wrap it in this bot's web server: users may be unable to reach that
+        # host because of network or regional restrictions.
+        if SECURE_GATE_MODE == "telegram":
+            return target_url
+
         algorithm = await db.get_hash_algorithm()
         hash_id = generate_hash_id(algorithm, target_url)
         await db.store_masked_link(hash_id, target_url, algorithm)
