@@ -6,6 +6,8 @@ import json
 import os
 import ipaddress
 import hmac
+import hashlib
+import html
 import json
 from datetime import datetime
 from collections import defaultdict
@@ -18,6 +20,7 @@ from config import (
     SECURE_CHALLENGE_MIN_SCORE,
     SECURE_GRANT_TTL,
     SECURE_SESSION_TTL,
+    TG_BOT_TOKEN,
 )
 
 routes = web.RouteTableDef()
@@ -193,6 +196,48 @@ async def root_route_handler(request):
 
 # ======================== SERVER-SIDE COMPLETION GATE ====================== #
 
+def _verify_telegram_login(user_data: dict) -> bool:
+    """
+    Verify Telegram Login Widget data using the bot token.
+
+    This is the important anti-bypass step: a shortener scraper can fetch a
+    page, but it cannot manufacture a valid Telegram-signed user payload for
+    the account that requested the file.
+    """
+    if not TG_BOT_TOKEN or not isinstance(user_data, dict):
+        return False
+
+    supplied_hash = str(user_data.get("hash", ""))
+    raw_id = user_data.get("id")
+    raw_auth_date = user_data.get("auth_date")
+    if not supplied_hash or not raw_id or not raw_auth_date:
+        return False
+
+    try:
+        auth_date = int(raw_auth_date)
+        user_id = int(raw_id)
+    except (TypeError, ValueError):
+        return False
+
+    now = int(time.time())
+    if auth_date > now + 60 or now - auth_date > 86400:
+        return False
+
+    fields = []
+    for key in sorted(user_data):
+        if key == "hash" or user_data[key] is None:
+            continue
+        fields.append(f"{key}={user_data[key]}")
+    data_check_string = "\n".join(fields)
+    secret_key = hashlib.sha256(TG_BOT_TOKEN.encode("utf-8")).digest()
+    expected_hash = hmac.new(
+        secret_key,
+        data_check_string.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return user_id > 0 and hmac.compare_digest(expected_hash, supplied_hash)
+
+
 @routes.get("/complete/{session_token}")
 async def secure_completion_page(request):
     """
@@ -206,14 +251,28 @@ async def secure_completion_page(request):
     if not raw_session or len(raw_session) > 128:
         return web.Response(text="Invalid verification session.", status=400)
 
-    if not BASE_URL or not BOT_USERNAME:
+    if not BASE_URL:
         LOGGER(__name__).error(
-            "Secure gate requires BASE_URL and BOT_USERNAME to be configured."
+            "Secure gate requires BASE_URL or RENDER_EXTERNAL_URL to be configured."
         )
         return web.Response(text="Secure gate is not configured.", status=503)
 
+    session_doc = await db.get_access_session(raw_session)
+    if not session_doc:
+        return web.Response(
+            text="This verification link is expired or has already been used.",
+            status=410,
+        )
+
+    widget_bot = str(
+        session_doc.get("bot_username") or BOT_USERNAME
+    ).lstrip("@")
+    if not widget_bot:
+        return web.Response(text="Bot username is not configured.", status=503)
+
     verify_url = f"{BASE_URL.rstrip('/')}/complete/verify"
     token_js = json.dumps(raw_session)
+    widget_bot_html = html.escape(widget_bot, quote=True)
     html_content = f"""<!doctype html>
 <html lang="en">
 <head>
@@ -239,20 +298,60 @@ async def secure_completion_page(request):
 <body>
   <main class="card">
     <div class="icon">🛡️</div>
-    <h2>Checking your browser</h2>
-    <p id="status">Please wait while we verify this access session.</p>
+    <h2>Human verification</h2>
+    <p id="status">Complete the short-link steps, then verify with Telegram.</p>
     <div class="bar"><div id="fill"></div></div>
+    <div id="telegram-login">
+      <script async src="https://telegram.org/js/telegram-widget.js?22"
+        data-telegram-login="{widget_bot_html}" data-size="large"
+        data-request-access="write"
+        data-onauth="onTelegramAuth(user)"></script>
+    </div>
     <p id="error"></p>
-    <small>This verification link expires automatically.</small>
+    <small>Telegram verification binds this link to the requesting account.</small>
   </main>
 <script>
+let secureFingerprint = null;
+let secureScore = 0;
+let secureStarted = performance.now();
+const secureSession = {token_js};
+const secureVerifyUrl = {json.dumps(verify_url)};
+const secureMinScore = {int(SECURE_CHALLENGE_MIN_SCORE)};
+
+function onTelegramAuth(telegramUser) {{
+  if (!secureFingerprint) {{
+    document.getElementById("error").textContent = "Browser verification is still running.";
+    document.getElementById("error").style.display = "block";
+    return;
+  }}
+  document.getElementById("status").textContent = "Finalizing secure access...";
+  fetch(secureVerifyUrl, {{
+    method: "POST",
+    credentials: "same-origin",
+    headers: {{ "Content-Type": "application/json" }},
+    body: JSON.stringify({{
+      session: secureSession,
+      score: secureScore,
+      elapsed_ms: Math.round(performance.now() - secureStarted),
+      fingerprint: secureFingerprint,
+      telegram: telegramUser
+    }})
+  }}).then(async function (response) {{
+    const data = await response.json();
+    if (!response.ok || !data.redirect) throw new Error(data.error || "Verification failed");
+    window.location.replace(data.redirect);
+  }}).catch(function (e) {{
+    document.getElementById("status").textContent = "Verification failed";
+    const error = document.getElementById("error");
+    error.textContent = e.message || "Please request a new link.";
+    error.style.display = "block";
+  }});
+}}
+
 (function () {{
-  const session = {token_js};
-  const verifyUrl = {json.dumps(verify_url)};
   const started = performance.now();
   const fill = document.getElementById("fill");
   const status = document.getElementById("status");
-  const error = document.getElementById("error");
   const fp = {{
     webdriver: navigator.webdriver === true,
     plugins: navigator.plugins ? navigator.plugins.length : 0,
@@ -271,30 +370,17 @@ async def secure_completion_page(request):
   if (fp.cookieEnabled) score++;
   if (fp.plugins > 0 || fp.chrome) score++;
   fill.style.width = Math.min(100, score * 20) + "%";
-
-  setTimeout(async function () {{
-    status.textContent = "Finalizing verification...";
-    try {{
-      const response = await fetch(verifyUrl, {{
-        method: "POST",
-        credentials: "same-origin",
-        headers: {{ "Content-Type": "application/json" }},
-        body: JSON.stringify({{
-          session: session,
-          score: score,
-          elapsed_ms: Math.round(performance.now() - started),
-          fingerprint: fp
-        }})
-      }});
-      const data = await response.json();
-      if (!response.ok || !data.redirect) throw new Error(data.error || "Verification failed");
-      window.location.replace(data.redirect);
-    }} catch (e) {{
-      status.textContent = "Verification failed";
-      error.textContent = e.message || "Please request a new link.";
-      error.style.display = "block";
-    }}
-  }}, 1600);
+  secureFingerprint = fp;
+  secureScore = score;
+  secureStarted = started;
+  if (score < secureMinScore) {{
+    status.textContent = "Browser verification failed.";
+    const error = document.getElementById("error");
+    error.textContent = "Please use a normal browser and try again.";
+    error.style.display = "block";
+  }} else {{
+    status.textContent = "Browser checked. Click the Telegram button to continue.";
+  }}
 }})();
 </script>
 </body>
@@ -313,10 +399,7 @@ async def secure_completion_page(request):
 
 @routes.post("/complete/verify")
 async def complete_secure_session(request):
-    """Turn one completed browser session into one Telegram grant."""
-    if not BOT_USERNAME:
-        return web.json_response({"error": "Bot username is not configured."}, status=503)
-
+    """Turn a browser session plus Telegram Login proof into one grant."""
     try:
         data = await request.json()
         raw_session = str(data.get("session", ""))
@@ -324,6 +407,7 @@ async def complete_secure_session(request):
         score = max(0, min(10, int(data.get("score", 0))))
         elapsed_ms = int(data.get("elapsed_ms", 0))
         fingerprint = data.get("fingerprint") or {}
+        telegram = data.get("telegram") or {}
     except (ValueError, TypeError, json.JSONDecodeError):
         return web.json_response({"error": "Invalid verification request."}, status=400)
 
@@ -339,12 +423,19 @@ async def complete_secure_session(request):
     if elapsed_ms < 1200 or score < SECURE_CHALLENGE_MIN_SCORE:
         return web.json_response({"error": "Browser verification failed."}, status=403)
 
+    if not _verify_telegram_login(telegram):
+        return web.json_response(
+            {"error": "Telegram account verification failed."},
+            status=403,
+        )
+
     grant = await db.complete_access_session(
         raw_session=raw_session,
         user_agent=request.headers.get("User-Agent", ""),
         client_ip=get_client_ip(request),
         score=score,
         grant_ttl_seconds=SECURE_GRANT_TTL,
+        telegram_user_id=int(telegram.get("id", 0)),
     )
     if not grant:
         return web.json_response(
@@ -352,8 +443,15 @@ async def complete_secure_session(request):
             status=410,
         )
 
+    bot_username = str(grant.get("bot_username") or BOT_USERNAME).lstrip("@")
+    if not bot_username:
+        return web.json_response(
+            {"error": "Bot username is not configured."},
+            status=503,
+        )
+
     return web.json_response({
-        "redirect": f"https://t.me/{BOT_USERNAME}?start=grant_{grant['token']}"
+        "redirect": f"https://t.me/{bot_username}?start=grant_{grant['token']}"
     })
 
 
