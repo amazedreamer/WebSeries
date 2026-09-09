@@ -5,10 +5,20 @@ import time
 import json
 import os
 import ipaddress
+import hmac
+import json
 from datetime import datetime
 from collections import defaultdict
 from database.database import db
-from config import BASE_URL, LOGGER, SHORTLINK_URL
+from config import (
+    BASE_URL,
+    BOT_USERNAME,
+    LOGGER,
+    SHORTLINK_URL,
+    SECURE_CHALLENGE_MIN_SCORE,
+    SECURE_GRANT_TTL,
+    SECURE_SESSION_TTL,
+)
 
 routes = web.RouteTableDef()
 
@@ -179,6 +189,172 @@ def get_client_ip(request) -> str:
 @routes.get("/", allow_head=True)
 async def root_route_handler(request):
     return web.json_response("Codeflix FileStore")
+
+
+# ======================== SERVER-SIDE COMPLETION GATE ====================== #
+
+@routes.get("/complete/{session_token}")
+async def secure_completion_page(request):
+    """
+    Destination used by new shortener links.
+
+    It deliberately does not expose the file payload.  A browser must retain
+    the session cookie and pass the lightweight challenge before the server
+    issues a one-time Telegram grant.
+    """
+    raw_session = request.match_info.get("session_token", "")
+    if not raw_session or len(raw_session) > 128:
+        return web.Response(text="Invalid verification session.", status=400)
+
+    if not BASE_URL or not BOT_USERNAME:
+        LOGGER(__name__).error(
+            "Secure gate requires BASE_URL and BOT_USERNAME to be configured."
+        )
+        return web.Response(text="Secure gate is not configured.", status=503)
+
+    verify_url = f"{BASE_URL.rstrip('/')}/complete/verify"
+    token_js = json.dumps(raw_session)
+    html_content = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Security verification</title>
+  <style>
+    :root {{ color-scheme: dark; }}
+    body {{ margin:0; min-height:100vh; display:grid; place-items:center;
+      background:#0b0d10; color:#fff; font-family:system-ui,sans-serif; }}
+    .card {{ width:min(390px,calc(100% - 40px)); padding:32px; text-align:center;
+      background:#15191f; border:1px solid #29313a; border-radius:18px;
+      box-shadow:0 16px 50px #0008; }}
+    .icon {{ font-size:48px; }}
+    h2 {{ margin:12px 0 8px; }}
+    p {{ color:#aab4bf; line-height:1.5; }}
+    .bar {{ height:5px; margin:22px 0; background:#29313a; border-radius:5px; overflow:hidden; }}
+    #fill {{ width:0; height:100%; background:#42e695; transition:width .35s; }}
+    #error {{ display:none; color:#ff7777; }}
+    small {{ color:#687582; }}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon">🛡️</div>
+    <h2>Checking your browser</h2>
+    <p id="status">Please wait while we verify this access session.</p>
+    <div class="bar"><div id="fill"></div></div>
+    <p id="error"></p>
+    <small>This verification link expires automatically.</small>
+  </main>
+<script>
+(function () {{
+  const session = {token_js};
+  const verifyUrl = {json.dumps(verify_url)};
+  const started = performance.now();
+  const fill = document.getElementById("fill");
+  const status = document.getElementById("status");
+  const error = document.getElementById("error");
+  const fp = {{
+    webdriver: navigator.webdriver === true,
+    plugins: navigator.plugins ? navigator.plugins.length : 0,
+    chrome: !!window.chrome,
+    screen: (screen.width || 0) + "x" + (screen.height || 0),
+    colorDepth: screen.colorDepth || 0,
+    language: navigator.language || "",
+    platform: navigator.platform || "",
+    touchPoints: navigator.maxTouchPoints || 0,
+    cookieEnabled: navigator.cookieEnabled === true
+  }};
+  let score = 0;
+  if (!fp.webdriver) score++;
+  if (fp.screen !== "0x0") score++;
+  if (fp.colorDepth > 0) score++;
+  if (fp.cookieEnabled) score++;
+  if (fp.plugins > 0 || fp.chrome) score++;
+  fill.style.width = Math.min(100, score * 20) + "%";
+
+  setTimeout(async function () {{
+    status.textContent = "Finalizing verification...";
+    try {{
+      const response = await fetch(verifyUrl, {{
+        method: "POST",
+        credentials: "same-origin",
+        headers: {{ "Content-Type": "application/json" }},
+        body: JSON.stringify({{
+          session: session,
+          score: score,
+          elapsed_ms: Math.round(performance.now() - started),
+          fingerprint: fp
+        }})
+      }});
+      const data = await response.json();
+      if (!response.ok || !data.redirect) throw new Error(data.error || "Verification failed");
+      window.location.replace(data.redirect);
+    }} catch (e) {{
+      status.textContent = "Verification failed";
+      error.textContent = e.message || "Please request a new link.";
+      error.style.display = "block";
+    }}
+  }}, 1600);
+}})();
+</script>
+</body>
+</html>"""
+    response = web.Response(text=html_content, content_type="text/html")
+    response.set_cookie(
+        "sg_session",
+        raw_session,
+        max_age=max(60, int(SECURE_SESSION_TTL)),
+        httponly=False,
+        samesite="Lax",
+        secure=BASE_URL.lower().startswith("https://"),
+    )
+    return response
+
+
+@routes.post("/complete/verify")
+async def complete_secure_session(request):
+    """Turn one completed browser session into one Telegram grant."""
+    if not BOT_USERNAME:
+        return web.json_response({"error": "Bot username is not configured."}, status=503)
+
+    try:
+        data = await request.json()
+        raw_session = str(data.get("session", ""))
+        cookie_session = request.cookies.get("sg_session", "")
+        score = max(0, min(10, int(data.get("score", 0))))
+        elapsed_ms = int(data.get("elapsed_ms", 0))
+        fingerprint = data.get("fingerprint") or {}
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return web.json_response({"error": "Invalid verification request."}, status=400)
+
+    if (
+        not raw_session
+        or not cookie_session
+        or not hmac.compare_digest(raw_session, cookie_session)
+    ):
+        return web.json_response({"error": "Verification session mismatch."}, status=403)
+
+    if fingerprint.get("webdriver") is True:
+        return web.json_response({"error": "Automated browser detected."}, status=403)
+    if elapsed_ms < 1200 or score < SECURE_CHALLENGE_MIN_SCORE:
+        return web.json_response({"error": "Browser verification failed."}, status=403)
+
+    grant = await db.complete_access_session(
+        raw_session=raw_session,
+        user_agent=request.headers.get("User-Agent", ""),
+        client_ip=get_client_ip(request),
+        score=score,
+        grant_ttl_seconds=SECURE_GRANT_TTL,
+    )
+    if not grant:
+        return web.json_response(
+            {"error": "This verification link is expired or already used."},
+            status=410,
+        )
+
+    return web.json_response({
+        "redirect": f"https://t.me/{BOT_USERNAME}?start=grant_{grant['token']}"
+    })
 
 
 # ======================== MASKED LINK HANDLER ======================== #
