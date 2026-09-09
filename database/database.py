@@ -5,6 +5,8 @@ import motor, asyncio
 import motor.motor_asyncio
 import time
 import pymongo, os
+import hashlib
+import secrets
 from config import DB_URI, DB_NAME
 import logging
 from datetime import datetime, timedelta
@@ -69,6 +71,11 @@ class Rohit:
         self.shortener_cooldowns = self.database['shortener_cooldowns']
         self.bypass_bans = self.database['bypass_bans']
         self.shortener_access = self.database['shortener_access']
+        # Opaque shortener sessions and one-time Telegram grants.  The
+        # database-channel message IDs are never placed in the public
+        # shortener destination for new links.
+        self.access_sessions = self.database['access_sessions']
+        self.access_grants = self.database['access_grants']
 
         # ── Referral system ──────────────────────────────────────────────────
         # referrals: { _id: referrer_id,
@@ -659,6 +666,98 @@ class Rohit:
     async def delete_pending(self, user_id: int, base64: str):
         await self.pending_shortener.delete_one(
             {'_id': self._pending_id(user_id, base64)}
+        )
+
+    # ═══════════════════════════════════════════════════════════
+    # SERVER-SIDE COMPLETION GRANTS
+    # ═══════════════════════════════════════════════════════════
+    @staticmethod
+    def _secure_hash(value: str) -> str:
+        return hashlib.sha256(str(value).encode("utf-8")).hexdigest()
+
+    async def create_access_session(
+        self,
+        user_id: int,
+        base64: str,
+        slot_idx: int,
+        ttl_seconds: int,
+    ) -> str:
+        """Create an opaque session token for the shortener destination."""
+        raw = secrets.token_urlsafe(32)
+        now = time.time()
+        await self.access_sessions.insert_one({
+            '_id': self._secure_hash(raw),
+            'user_id': int(user_id),
+            'base64': str(base64),
+            'slot_idx': int(slot_idx) if slot_idx is not None else -1,
+            'created_at': now,
+            'expires_at': now + max(60, int(ttl_seconds)),
+            'completed': False,
+        })
+        return raw
+
+    async def complete_access_session(
+        self,
+        raw_session: str,
+        user_agent: str = "",
+        client_ip: str = "",
+        score: int = 0,
+        grant_ttl_seconds: int = 300,
+    ):
+        """
+        Atomically consume a session and issue one short-lived Telegram grant.
+        Returning None means the session is invalid, expired, or already used.
+        """
+        now = time.time()
+        session = await self.access_sessions.find_one_and_update(
+            {
+                '_id': self._secure_hash(raw_session),
+                'completed': {'$ne': True},
+                'expires_at': {'$gt': now},
+            },
+            {
+                '$set': {
+                    'completed': True,
+                    'completed_at': now,
+                    'completion_user_agent': str(user_agent)[:300],
+                    'completion_ip': str(client_ip)[:100],
+                    'completion_score': int(score),
+                }
+            },
+            return_document=pymongo.ReturnDocument.AFTER,
+        )
+        if not session:
+            return None
+
+        raw_grant = secrets.token_urlsafe(32)
+        await self.access_grants.insert_one({
+            '_id': self._secure_hash(raw_grant),
+            'user_id': int(session['user_id']),
+            'base64': session['base64'],
+            'slot_idx': int(session.get('slot_idx', -1)),
+            'created_at': now,
+            'expires_at': now + max(60, int(grant_ttl_seconds)),
+            'used': False,
+        })
+        return {
+            'token': raw_grant,
+            'user_id': int(session['user_id']),
+            'base64': session['base64'],
+            'slot_idx': int(session.get('slot_idx', -1)),
+        }
+
+    async def consume_access_grant(self, raw_grant: str, user_id: int):
+        """Atomically consume a grant and bind it to its original Telegram user."""
+        now = time.time()
+        return await self.access_grants.find_one_and_update(
+            {
+                '_id': self._secure_hash(raw_grant),
+                'user_id': int(user_id),
+                'used': {'$ne': True},
+                'expires_at': {'$gt': now},
+            },
+            {'$set': {'used': True, 'used_at': now}},
+            return_document=pymongo.ReturnDocument.AFTER,
         )
 
     async def register_bypass_attempt(self, user_id: int) -> dict:
