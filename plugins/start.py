@@ -104,21 +104,41 @@ async def short_url(client: Client, message: Message, base64_string):
 
         await _cleanup_prior_pending_for_user(client, user_id)
 
-        # New links use a server-side opaque session.  The public shortener
-        # destination no longer contains the encoded DB-channel message IDs.
-        # The old yu3elk destination remains only as a compatibility fallback
-        # when BASE_URL/secure gate is not configured.
+        # New links use a server-side opaque session. Telegram mode keeps the
+        # final destination as a normal t.me deep link, so users do not need
+        # to open this bot's BASE_URL.
         secure_session = None
-        if SECURE_GATE_ENABLED and BASE_URL:
+        if SECURE_GATE_ENABLED:
+            # Web mode is optional. Telegram mode below does not need a
+            # public URL and is the default.
+            if SECURE_GATE_MODE == "web" and not BASE_URL:
+                LOGGER(__name__).error(
+                    "Secure gate is enabled but BASE_URL/RENDER_EXTERNAL_URL is missing."
+                )
+                await message.reply_text(
+                    "<blockquote>⚠️ <b>ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ sᴇʀᴠɪᴄᴇ ɪs ᴛᴇᴍᴘᴏʀᴀʀɪʟʏ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ</b></blockquote>\n\n"
+                    "<blockquote>ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ.</blockquote>"
+                )
+                return
+
             secure_session = await db.create_access_session(
                 user_id=user_id,
                 base64=base64_string,
                 slot_idx=-1,
                 ttl_seconds=SECURE_SESSION_TTL,
+                bot_username=client.username or BOT_USERNAME,
             )
-            prem_link = (
-                f"{BASE_URL.rstrip('/')}/complete/{secure_session}"
-            )
+            bot_username = (client.username or BOT_USERNAME).lstrip("@")
+            if SECURE_GATE_MODE == "web":
+                prem_link = f"{BASE_URL.rstrip('/')}/complete/{secure_session}"
+            else:
+                if not bot_username:
+                    LOGGER(__name__).error("Bot username is not available.")
+                    await message.reply_text(
+                        "<blockquote>⚠️ <b>ʙᴏᴛ ᴜsᴇʀɴᴀᴍᴇ ɪs ɴᴏᴛ ᴄᴏɴꜰɪɢᴜʀᴇᴅ</b></blockquote>"
+                    )
+                    return
+                prem_link = f"https://t.me/{bot_username}?start=access_{secure_session}"
         else:
             prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
 
@@ -412,8 +432,45 @@ async def start_command(client: Client, message: Message):
                 return await _handle_invalid_secure_grant(message, user_id)
             base64_string = secure_grant["base64"]
             secure_access = True
+        elif basic.startswith("access_"):
+            # Direct Telegram mode: the shortener destination is already a
+            # Telegram deep link. The token is opaque, user-bound, expiring,
+            # and can be consumed only once.
+            if not SECURE_GATE_ENABLED or SECURE_GATE_MODE != "telegram":
+                return await _handle_invalid_secure_grant(message, user_id)
+
+            raw_session = basic[7:]
+            session = await db.get_access_session(raw_session)
+            if not session or int(session.get("user_id", 0)) != int(user_id):
+                return await _handle_invalid_secure_grant(message, user_id)
+
+            elapsed = time.time() - float(session.get("created_at", 0))
+            if elapsed < BYPASS_PROTECTION_SECONDS:
+                await _handle_bypass_attempt(
+                    client, message, user_id, session.get("base64", "")
+                )
+                return
+
+            consumed_session = await db.consume_access_session(
+                raw_session, user_id
+            )
+            if not consumed_session:
+                return await _handle_invalid_secure_grant(message, user_id)
+
+            base64_string = consumed_session["base64"]
+            secure_grant = consumed_session
+            secure_access = True
         elif basic.startswith("yu3elk"):
             base64_string = basic[6:-1]
+            if SECURE_GATE_ENABLED:
+                # Old deep links expose the file payload and are not allowed
+                # once the strict gate is enabled.  They cannot be upgraded
+                # safely; users must request a fresh link.
+                await message.reply_text(
+                    "<blockquote>⏳ <b>ᴛʜɪs ᴏʟᴅ ʟɪɴᴋ ɪs ɴᴏ ʟᴏɴɢᴇʀ ᴠᴀʟɪᴅ</b></blockquote>\n\n"
+                    "<blockquote>ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴀ ꜰʀᴇsʜ ʟɪɴᴋ ꜰʀᴏᴍ ᴛʜᴇ ʙᴏᴛ.</blockquote>"
+                )
+                return
         else:
             base64_string = basic
 
