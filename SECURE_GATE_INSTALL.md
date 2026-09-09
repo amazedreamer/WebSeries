@@ -2,23 +2,22 @@
 
 ## What changed
 
-New links use this flow:
+The default Telegram-only flow uses this:
 
 ```text
 Telegram file request
   -> opaque database session
   -> shortener
-  -> /complete/<session>
-  -> browser/cookie challenge
-  -> one-time, user-bound grant
-  -> /start grant_<token>
+  -> t.me/<bot>?start=access_<session>
+  -> exact token, owner, expiry and time checks
   -> file
 ```
 
 The encoded database-channel message ID is no longer placed in the public
-shortener destination. The existing `yu3elk` flow is retained only for
-backward compatibility with old links, and now rejects callbacks that have no
-matching pending session.
+shortener destination. The final destination is a normal Telegram deep link;
+the bot's web `BASE_URL` is not involved. When secure mode is enabled, old
+`yu3elk` links are rejected because they expose the file payload and cannot be
+upgraded safely.
 
 ## Files changed
 
@@ -46,13 +45,17 @@ DATABASE_NAME=OnlyFapsFileShareBot
 CHANNEL_ID=-100...
 OWNER=your_owner_username
 OWNER_ID=123456789
-BASE_URL=https://your-public-domain.example
+# Leave empty in SECURE_GATE_MODE=telegram.
+BASE_URL=
 BOT_USERNAME=YourBotUsername
 PORT=8001
 ```
 
-`BASE_URL` must be a public HTTPS URL that reaches this bot's aiohttp server.
-`BOT_USERNAME` is the username of the same Telegram bot, without `@`.
+`BOT_USERNAME` is the username of the same Telegram bot, without `@`. The
+running bot also stores its username in each new session. `BASE_URL` is not
+required in the default Telegram mode. The optional browser mode
+(`SECURE_GATE_MODE=web`) still requires a public HTTPS `BASE_URL` and the
+Telegram Login Widget domain configuration.
 
 Configure each shortener with both values:
 
@@ -61,6 +64,10 @@ SHORTLINK_URL=example-shortener.com
 SHORTLINK_API=your-provider-key
 ```
 
+Leave `BASE_URL` empty if you use the default Telegram mode. Do not set
+`SECURE_GATE_MODE=web` unless users can reach the public web host. After
+deployment, all links must be regenerated; old `yu3elk` links are
+intentionally invalid.
 Use `SECURE_GATE_ENABLED=false` only as a temporary rollback switch. New
 links then use the legacy `yu3elk` flow.
 
@@ -68,6 +75,7 @@ links then use the legacy `yu3elk` flow.
 
 ```text
 SECURE_GATE_ENABLED=true
+SECURE_GATE_MODE=telegram
 SECURE_SESSION_TTL=1200
 SECURE_GRANT_TTL=300
 SECURE_CHALLENGE_MIN_SCORE=3
@@ -75,9 +83,11 @@ SECURE_BIND_USER=true
 BYPASS_PROTECTION_SECONDS=90
 ```
 
-The grant is bound to the Telegram user who requested the file, expires after
-five minutes by default, and is atomically marked used before the file is
-served.
+The opaque session is bound to the Telegram user who requested the file,
+expires after 20 minutes by default, and is atomically marked used before the
+file is served. A bypass bot that produces a different deep-link payload gets
+an invalid-token response. A token returned immediately is also rejected until
+`BYPASS_PROTECTION_SECONDS` has elapsed.
 
 ## Important deployment action
 
@@ -88,7 +98,7 @@ and each shortener provider before deployment. Put the replacement values in
 deployment secrets/environment variables, not in source control.
 
 This protection blocks direct payload reuse and basic HTTP/browserless
-bypassers. No client-side challenge can stop a fully automated browser that
-successfully completes every provider step. If the shortener offers a
-server-to-server completion webhook or postback, connect that callback to
-`complete_access_session` for a stronger provider-confirmed completion signal.
+bypassers without requiring users to open `BASE_URL`. It cannot distinguish a
+real user from an automated client that obtains the exact final Telegram link
+and deliberately waits out the configured delay; a shortener server-to-server
+completion webhook would be required for that stronger guarantee.
