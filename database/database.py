@@ -681,6 +681,7 @@ class Rohit:
         base64: str,
         slot_idx: int,
         ttl_seconds: int,
+        bot_username: str = "",
     ) -> str:
         """Create an opaque session token for the shortener destination."""
         raw = secrets.token_urlsafe(32)
@@ -690,11 +691,40 @@ class Rohit:
             'user_id': int(user_id),
             'base64': str(base64),
             'slot_idx': int(slot_idx) if slot_idx is not None else -1,
+            'bot_username': str(bot_username).lstrip("@"),
             'created_at': now,
             'expires_at': now + max(60, int(ttl_seconds)),
             'completed': False,
         })
         return raw
+
+    async def get_access_session(self, raw_session: str):
+        """Read an unexpired session without consuming it."""
+        return await self.access_sessions.find_one({
+            '_id': self._secure_hash(raw_session),
+            'completed': {'$ne': True},
+            'expires_at': {'$gt': time.time()},
+        })
+
+    async def consume_access_session(self, raw_session: str, user_id: int):
+        """Atomically consume a direct Telegram-mode session for its owner."""
+        now = time.time()
+        return await self.access_sessions.find_one_and_update(
+            {
+                '_id': self._secure_hash(raw_session),
+                'user_id': int(user_id),
+                'completed': {'$ne': True},
+                'expires_at': {'$gt': now},
+            },
+            {
+                '$set': {
+                    'completed': True,
+                    'completed_at': now,
+                    'completion_telegram_user_id': int(user_id),
+                }
+            },
+            return_document=pymongo.ReturnDocument.AFTER,
+        )
 
     async def complete_access_session(
         self,
@@ -703,6 +733,7 @@ class Rohit:
         client_ip: str = "",
         score: int = 0,
         grant_ttl_seconds: int = 300,
+        telegram_user_id: int = 0,
     ):
         """
         Atomically consume a session and issue one short-lived Telegram grant.
@@ -714,6 +745,11 @@ class Rohit:
                 '_id': self._secure_hash(raw_session),
                 'completed': {'$ne': True},
                 'expires_at': {'$gt': now},
+                **(
+                    {'user_id': int(telegram_user_id)}
+                    if telegram_user_id
+                    else {}
+                ),
             },
             {
                 '$set': {
@@ -744,6 +780,7 @@ class Rohit:
             'user_id': int(session['user_id']),
             'base64': session['base64'],
             'slot_idx': int(session.get('slot_idx', -1)),
+            'bot_username': str(session.get('bot_username', '')),
         }
 
     async def consume_access_grant(self, raw_grant: str, user_id: int):
