@@ -125,6 +125,16 @@ class Bot(Client):
         usr_bot_me = await self.get_me()
         self.uptime = get_indian_time()
 
+        # MongoDB TTL cleanup for the new opaque sessions/grants.  The
+        # security checks do not depend on TTL timing; expiry is always
+        # validated in the query, while these indexes prevent dead records
+        # from accumulating indefinitely.
+        try:
+            await db.access_sessions.create_index("expires_at", expireAfterSeconds=0)
+            await db.access_grants.create_index("expires_at", expireAfterSeconds=0)
+        except Exception as e:
+            self.LOGGER(__name__).warning(f"Security TTL index setup failed: {e}")
+
         try:
             await self.set_bot_commands(BOT_COMMANDS)
             self.LOGGER(__name__).info(
