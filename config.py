@@ -34,11 +34,12 @@ API_HASH = os.environ.get("API_HASH", "f5e4d37759af94d4efc2dfb58b30af39")  # You
 # --------------------------------------------
 
 CHANNEL_ID = int(os.environ.get("CHANNEL_ID", "-1003769628273"))  # Your db channel Id
-OWNER = os.environ.get("OWNER", "sakxxii")  # Owner username without @
+OWNER = os.environ.get("OWNER", "sakxxiii")  # Owner username without @
 OWNER_ID = int(os.environ.get("OWNER_ID", "8584220782"))  # Owner id
 # --------------------------------------------
 PORT = os.environ.get("PORT", "8001")
 BASE_URL = os.environ.get("BASE_URL", "")  # e.g. https://your-domain.com
+BOT_USERNAME = os.environ.get("BOT_USERNAME", "TheOnlyFapsRoBot").lstrip("@")
 # --------------------------------------------
 DB_URI = os.environ.get("DATABASE_URL", "mongodb+srv://sameerpandey1:k9TPWFNg2jK4PDET@cluster0.5ge2hgy.mongodb.net/?appName=Cluster0")
 DB_NAME = os.environ.get("DATABASE_NAME", "OnlyFapsFileShareBot")
@@ -107,6 +108,21 @@ if not SHORTLINK_PROVIDERS and SHORTLINK_URL:
 # a bypass attempt: warns first time, then 12h ban, then 24h ban, then perma.
 BYPASS_PROTECTION_SECONDS = int(os.environ.get("BYPASS_PROTECTION_SECONDS", "90"))
 
+
+# === SERVER-SIDE COMPLETION GRANTS ===========================================
+# New verification links never contain the database-channel message IDs.
+# A short-lived opaque session is sent through the shortener, and a separate
+# one-time grant is issued only after the completion page passes its browser
+# challenge.  This is stronger than the legacy time-only yu3elk check.
+SECURE_GATE_ENABLED = os.environ.get("SECURE_GATE_ENABLED", "true").lower() in {
+    "1", "true", "yes", "on"
+}
+SECURE_SESSION_TTL = int(os.environ.get("SECURE_SESSION_TTL", "1200"))
+SECURE_GRANT_TTL = int(os.environ.get("SECURE_GRANT_TTL", "300"))
+SECURE_CHALLENGE_MIN_SCORE = int(os.environ.get("SECURE_CHALLENGE_MIN_SCORE", "3"))
+SECURE_BIND_USER = os.environ.get("SECURE_BIND_USER", "true").lower() in {
+    "1", "true", "yes", "on"
+}
 # === MESSAGE AUTO-EXPIRY ====================================================
 # Short-link messages and the buy-premium QR/payment message both auto-delete
 # this many seconds after being sent (if not already cleaned up by the user
