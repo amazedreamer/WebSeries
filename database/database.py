@@ -5,8 +5,6 @@ import motor, asyncio
 import motor.motor_asyncio
 import time
 import pymongo, os
-import hashlib
-import secrets
 from config import DB_URI, DB_NAME
 import logging
 from datetime import datetime, timedelta
@@ -71,11 +69,6 @@ class Rohit:
         self.shortener_cooldowns = self.database['shortener_cooldowns']
         self.bypass_bans = self.database['bypass_bans']
         self.shortener_access = self.database['shortener_access']
-        # Opaque shortener sessions and one-time Telegram grants.  The
-        # database-channel message IDs are never placed in the public
-        # shortener destination for new links.
-        self.access_sessions = self.database['access_sessions']
-        self.access_grants = self.database['access_grants']
 
         # ── Referral system ──────────────────────────────────────────────────
         # referrals: { _id: referrer_id,
@@ -668,135 +661,6 @@ class Rohit:
             {'_id': self._pending_id(user_id, base64)}
         )
 
-    # ═══════════════════════════════════════════════════════════
-    # SERVER-SIDE COMPLETION GRANTS
-    # ═══════════════════════════════════════════════════════════
-    @staticmethod
-    def _secure_hash(value: str) -> str:
-        return hashlib.sha256(str(value).encode("utf-8")).hexdigest()
-
-    async def create_access_session(
-        self,
-        user_id: int,
-        base64: str,
-        slot_idx: int,
-        ttl_seconds: int,
-        bot_username: str = "",
-    ) -> str:
-        """Create an opaque session token for the shortener destination."""
-        raw = secrets.token_urlsafe(32)
-        now = time.time()
-        await self.access_sessions.insert_one({
-            '_id': self._secure_hash(raw),
-            'user_id': int(user_id),
-            'base64': str(base64),
-            'slot_idx': int(slot_idx) if slot_idx is not None else -1,
-            'bot_username': str(bot_username).lstrip("@"),
-            'created_at': now,
-            'expires_at': now + max(60, int(ttl_seconds)),
-            'completed': False,
-        })
-        return raw
-
-    async def get_access_session(self, raw_session: str):
-        """Read an unexpired session without consuming it."""
-        return await self.access_sessions.find_one({
-            '_id': self._secure_hash(raw_session),
-            'completed': {'$ne': True},
-            'expires_at': {'$gt': time.time()},
-        })
-
-    async def consume_access_session(self, raw_session: str, user_id: int):
-        """Atomically consume a direct Telegram-mode session for its owner."""
-        now = time.time()
-        return await self.access_sessions.find_one_and_update(
-            {
-                '_id': self._secure_hash(raw_session),
-                'user_id': int(user_id),
-                'completed': {'$ne': True},
-                'expires_at': {'$gt': now},
-            },
-            {
-                '$set': {
-                    'completed': True,
-                    'completed_at': now,
-                    'completion_telegram_user_id': int(user_id),
-                }
-            },
-            return_document=pymongo.ReturnDocument.AFTER,
-        )
-
-    async def complete_access_session(
-        self,
-        raw_session: str,
-        user_agent: str = "",
-        client_ip: str = "",
-        score: int = 0,
-        grant_ttl_seconds: int = 300,
-        telegram_user_id: int = 0,
-    ):
-        """
-        Atomically consume a session and issue one short-lived Telegram grant.
-        Returning None means the session is invalid, expired, or already used.
-        """
-        now = time.time()
-        session = await self.access_sessions.find_one_and_update(
-            {
-                '_id': self._secure_hash(raw_session),
-                'completed': {'$ne': True},
-                'expires_at': {'$gt': now},
-                **(
-                    {'user_id': int(telegram_user_id)}
-                    if telegram_user_id
-                    else {}
-                ),
-            },
-            {
-                '$set': {
-                    'completed': True,
-                    'completed_at': now,
-                    'completion_user_agent': str(user_agent)[:300],
-                    'completion_ip': str(client_ip)[:100],
-                    'completion_score': int(score),
-                }
-            },
-            return_document=pymongo.ReturnDocument.AFTER,
-        )
-        if not session:
-            return None
-
-        raw_grant = secrets.token_urlsafe(32)
-        await self.access_grants.insert_one({
-            '_id': self._secure_hash(raw_grant),
-            'user_id': int(session['user_id']),
-            'base64': session['base64'],
-            'slot_idx': int(session.get('slot_idx', -1)),
-            'created_at': now,
-            'expires_at': now + max(60, int(grant_ttl_seconds)),
-            'used': False,
-        })
-        return {
-            'token': raw_grant,
-            'user_id': int(session['user_id']),
-            'base64': session['base64'],
-            'slot_idx': int(session.get('slot_idx', -1)),
-            'bot_username': str(session.get('bot_username', '')),
-        }
-
-    async def consume_access_grant(self, raw_grant: str, user_id: int):
-        """Atomically consume a grant and bind it to its original Telegram user."""
-        now = time.time()
-        return await self.access_grants.find_one_and_update(
-            {
-                '_id': self._secure_hash(raw_grant),
-                'user_id': int(user_id),
-                'used': {'$ne': True},
-                'expires_at': {'$gt': now},
-            },
-            {'$set': {'used': True, 'used_at': now}},
-            return_document=pymongo.ReturnDocument.AFTER,
-        )
-
     async def register_bypass_attempt(self, user_id: int) -> dict:
         now = time.time()
         existing = await self.bypass_bans.find_one({'_id': int(user_id)}) or {}
@@ -1193,11 +1057,40 @@ class Rohit:
         return await self.orders.find_one({'_id': order_id})
 
     async def get_pending_order_for_user(self, user_id: int):
-        """Return the most recent pending order for a user, or None."""
-        return await self.orders.find_one(
+        """
+        Return the most recent pending order for a user, or None.
+
+        A pending order is only ever flipped to 'expired' by the in-memory
+        auto-verifier task (see payment_verifier.py). If the bot restarts,
+        crashes, or that task dies for any reason while an order is still
+        pending, the row stays status='pending' in the DB forever, and this
+        function would keep blocking the user from ever creating a new
+        order ("you already have a pending order").
+
+        To guard against that, treat any 'pending' order whose wall-clock
+        expiry (created_at + PAYMENT_MAX_MINUTES + grace) has already
+        passed as stale: mark it 'expired' here and return None instead,
+        so the user can immediately start a fresh order.
+        """
+        from config import PAYMENT_MAX_MINUTES
+
+        order = await self.orders.find_one(
             {'user_id': int(user_id), 'status': 'pending'},
             sort=[('created_at', -1)]
         )
+        if not order:
+            return None
+
+        created_at = order.get('created_at')
+        if created_at:
+            # created_at is stored naive (datetime.utcnow()); compare naively.
+            grace_seconds = 120  # matches the auto-verifier's grace period
+            deadline = created_at + timedelta(minutes=PAYMENT_MAX_MINUTES) + timedelta(seconds=grace_seconds)
+            if datetime.utcnow() >= deadline:
+                await self.update_order_status(order['_id'], 'expired')
+                return None
+
+        return order
 
     async def update_order_status(self, order_id: str, status: str, txn_id: str = None):
         """Update order status; optionally record the Paytm transaction ID."""
