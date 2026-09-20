@@ -200,7 +200,6 @@ async def cb_handler(client: Bot, query: CallbackQuery):
                 [InlineKeyboardButton("💎 ɴᴏʀᴍᴀʟ ᴘʀᴇᴍɪᴜᴍ", callback_data="plan_type_normal")],
                 [InlineKeyboardButton("🚀 sᴜᴘᴇʀ ᴘʀᴇᴍɪᴜᴍ", callback_data="plan_type_super")],
                 [
-                    InlineKeyboardButton("🎁 ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ", callback_data="free_premium"),
                     InlineKeyboardButton("✖️ ᴄʟᴏsᴇ", callback_data="close"),
                 ],
             ]),
@@ -285,7 +284,7 @@ async def cb_handler(client: Bot, query: CallbackQuery):
             f"<blockquote>» ᴘʟᴀɴ: {plan_type_str} — <b>{plan['label']}</b></blockquote>\n"
             f"<blockquote>» ᴀᴍᴏᴜɴᴛ: <b>₹{amount}</b> (ᴇxᴀᴄᴛ — ᴅᴏ ɴᴏᴛ ᴄʜᴀɴɢᴇ)</blockquote>\n"
             f"<blockquote>» ᴏʀᴅᴇʀ ɪᴅ: <code>{order_id}</code></blockquote>\n\n"
-            f"<blockquote>📱 sᴄᴀɴ ᴡɪᴛʜ ᴀɴʏ ᴜᴘɪ ᴀᴘᴘ (Paytm / GPay / PhonePe).\n"
+            f"<blockquote>📱 sᴄᴀɴ ᴡɪᴛʜ ᴀɴʏ ᴜᴘɪ ᴀᴘᴘ (Paytm / GPay / PhonePe).</blockquote>\n"
             f"<blockquote>» ᴜᴘɪ ɪᴅ: <code>{UPI_ID}</code></blockquote>\n\n"
             f"<blockquote expandable>⚡ ᴘʟᴀɴ ᴀᴄᴛɪᴠᴀᴛᴇs ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴀꜰᴛᴇʀ ᴘᴀʏᴍᴇɴᴛ.\n"
             f"ɪꜰ ɴᴏᴛ ᴀᴄᴛɪᴠᴀᴛᴇᴅ ᴡɪᴛʜɪɴ 1-2 ᴍɪɴs, ᴛᴀᴘ <b>ɪ ʜᴀᴠᴇ ᴘᴀɪᴅ</b>.\n"
