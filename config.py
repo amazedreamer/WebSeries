@@ -239,7 +239,7 @@ PAYTM_MID       = os.environ.get("PAYTM_MID",       "PKNtOC25387320837859")   # 
 # The Vercel API wraps Paytm's transaction-status API.
 # URL format: GET PAYMENT_API_URL?mid=<MID>&oid=<order_id>
 # Returns JSON with STATUS, ORDERID, TXNAMOUNT, TXNID, BANKTXNID, TXNDATE.
-PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://paytm-3b6fa57ab6ab.herokuapp.com/")
+PAYMENT_API_URL         = os.environ.get("PAYMENT_API_URL",         "https://thedrunkbots-pay-check-api.onrender.com/")
 PAYMENT_VERIFY_INTERVAL = int(os.environ.get("PAYMENT_VERIFY_INTERVAL", "120"))  # secs between polls
 PAYMENT_MAX_MINUTES     = int(os.environ.get("PAYMENT_MAX_MINUTES",     "15"))   # order expiry
 AMOUNT_TOLERANCE        = float(os.environ.get("AMOUNT_TOLERANCE",      "2"))    # ₹ tolerance
