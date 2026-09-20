@@ -104,44 +104,7 @@ async def short_url(client: Client, message: Message, base64_string):
 
         await _cleanup_prior_pending_for_user(client, user_id)
 
-        # New links use a server-side opaque session. Telegram mode keeps the
-        # final destination as a normal t.me deep link, so users do not need
-        # to open this bot's BASE_URL.
-        secure_session = None
-        if SECURE_GATE_ENABLED:
-            # Web mode is optional. Telegram mode below does not need a
-            # public URL and is the default.
-            if SECURE_GATE_MODE == "web" and not BASE_URL:
-                LOGGER(__name__).error(
-                    "Secure gate is enabled but BASE_URL/RENDER_EXTERNAL_URL is missing."
-                )
-                await message.reply_text(
-                    "<blockquote>⚠️ <b>ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ sᴇʀᴠɪᴄᴇ ɪs ᴛᴇᴍᴘᴏʀᴀʀɪʟʏ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ</b></blockquote>\n\n"
-                    "<blockquote>ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ.</blockquote>"
-                )
-                return
-
-            secure_session = await db.create_access_session(
-                user_id=user_id,
-                base64=base64_string,
-                slot_idx=-1,
-                ttl_seconds=SECURE_SESSION_TTL,
-                bot_username=client.username or BOT_USERNAME,
-            )
-            bot_username = (client.username or BOT_USERNAME).lstrip("@")
-            if SECURE_GATE_MODE == "web":
-                prem_link = f"{BASE_URL.rstrip('/')}/complete/{secure_session}"
-            else:
-                if not bot_username:
-                    LOGGER(__name__).error("Bot username is not available.")
-                    await message.reply_text(
-                        "<blockquote>⚠️ <b>ʙᴏᴛ ᴜsᴇʀɴᴀᴍᴇ ɪs ɴᴏᴛ ᴄᴏɴꜰɪɢᴜʀᴇᴅ</b></blockquote>"
-                    )
-                    return
-                prem_link = f"https://t.me/{bot_username}?start=access_{secure_session}"
-        else:
-            prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
-
+        prem_link = f"https://t.me/{client.username}?start=yu3elk{base64_string}7"
         short_link, wait_seconds, _slot_idx = await get_shortlink_for_user(user_id, prem_link)
 
         if short_link is None:
@@ -172,7 +135,6 @@ async def short_url(client: Client, message: Message, base64_string):
             [InlineKeyboardButton("• ᴛᴜᴛᴏʀɪᴀʟ •", url=TUT_VID)],
             [
                 InlineKeyboardButton("💎 ʙᴜʏ ᴘʀᴇᴍɪᴜᴍ", callback_data="premium"),
-                InlineKeyboardButton("🎁 ꜰʀᴇᴇ ᴘʀᴇᴍɪᴜᴍ", callback_data="free_premium"),
             ],
         ]
 
@@ -258,27 +220,6 @@ async def _handle_bypass_attempt(client: Client, message: Message,
     await message.reply_text(text, reply_markup=InlineKeyboardMarkup([
         [InlineKeyboardButton("ᴄᴏɴᴛᴀᴄᴛ sᴜᴘᴘᴏʀᴛ", url=BAN_SUPPORT)],
     ]))
-
-
-async def _handle_invalid_secure_grant(message: Message, user_id: int):
-    """Reject replayed, forged, expired, or user-mismatched grants."""
-    try:
-        result = await db.register_bypass_attempt(user_id)
-        strikes = result.get("strikes", 1)
-        action = result.get("action", "warn")
-    except Exception as e:
-        print(f"[secure-gate] failed to register invalid grant: {e}")
-        strikes, action = 0, "blocked"
-
-    await message.reply_text(
-        "<blockquote>⛔ <b>ɪɴᴠᴀʟɪᴅ ᴏʀ ᴇxᴘɪʀᴇᴅ ᴀᴄᴄᴇss ɢʀᴀɴᴛ</b></blockquote>\n\n"
-        "<blockquote>ᴛʜɪs ʟɪɴᴋ ᴡᴀs ɴᴏᴛ ɪssᴜᴇᴅ ꜰᴏʀ ᴛʜɪs ᴜsᴇʀ, ʜᴀs ᴀʟʀᴇᴀᴅʏ ʙᴇᴇɴ ᴜsᴇᴅ, "
-        "ᴏʀ ʜᴀs ᴇxᴘɪʀᴇᴅ.</blockquote>\n\n"
-        f"<blockquote>» ʙʏᴘᴀss sᴛʀɪᴋᴇ: <b>#{strikes}</b> ({action})</blockquote>",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("• ʀᴇǫᴜᴇsᴛ ᴀ ɴᴇᴡ ʟɪɴᴋ •", callback_data="close")]
-        ]),
-    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -397,7 +338,7 @@ async def start_command(client: Client, message: Message):
     if not start_param or start_param.startswith("ref"):
         reply_markup = InlineKeyboardMarkup(
             [
-                [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/TheEroticBhabhiOfficial/18")],
+                [InlineKeyboardButton("• ᴍᴏʀᴇ ᴄʜᴀɴɴᴇʟs •", url="https://t.me/TheEroticBhabhii")],
                 [
                     InlineKeyboardButton("• ᴀʙᴏᴜᴛ", callback_data="about"),
                     InlineKeyboardButton('ʜᴇʟᴘ •', callback_data="help")
@@ -419,58 +360,10 @@ async def start_command(client: Client, message: Message):
         return
 
     # ── File / content start param ───────────────────────────────────────────
-    secure_grant = None
-    secure_access = False
     try:
         basic = start_param
-        if basic.startswith("grant_"):
-            # The only public value in a new Telegram deep link is an opaque,
-            # one-time database grant.  It is bound to the original user.
-            raw_grant = basic[6:]
-            secure_grant = await db.consume_access_grant(raw_grant, user_id)
-            if not secure_grant:
-                return await _handle_invalid_secure_grant(message, user_id)
-            base64_string = secure_grant["base64"]
-            secure_access = True
-        elif basic.startswith("access_"):
-            # Direct Telegram mode: the shortener destination is already a
-            # Telegram deep link. The token is opaque, user-bound, expiring,
-            # and can be consumed only once.
-            if not SECURE_GATE_ENABLED or SECURE_GATE_MODE != "telegram":
-                return await _handle_invalid_secure_grant(message, user_id)
-
-            raw_session = basic[7:]
-            session = await db.get_access_session(raw_session)
-            if not session or int(session.get("user_id", 0)) != int(user_id):
-                return await _handle_invalid_secure_grant(message, user_id)
-
-            elapsed = time.time() - float(session.get("created_at", 0))
-            if elapsed < BYPASS_PROTECTION_SECONDS:
-                await _handle_bypass_attempt(
-                    client, message, user_id, session.get("base64", "")
-                )
-                return
-
-            consumed_session = await db.consume_access_session(
-                raw_session, user_id
-            )
-            if not consumed_session:
-                return await _handle_invalid_secure_grant(message, user_id)
-
-            base64_string = consumed_session["base64"]
-            secure_grant = consumed_session
-            secure_access = True
-        elif basic.startswith("yu3elk"):
+        if basic.startswith("yu3elk"):
             base64_string = basic[6:-1]
-            if SECURE_GATE_ENABLED:
-                # Old deep links expose the file payload and are not allowed
-                # once the strict gate is enabled.  They cannot be upgraded
-                # safely; users must request a fresh link.
-                await message.reply_text(
-                    "<blockquote>⏳ <b>ᴛʜɪs ᴏʟᴅ ʟɪɴᴋ ɪs ɴᴏ ʟᴏɴɢᴇʀ ᴠᴀʟɪᴅ</b></blockquote>\n\n"
-                    "<blockquote>ᴘʟᴇᴀsᴇ ʀᴇǫᴜᴇsᴛ ᴀ ꜰʀᴇsʜ ʟɪɴᴋ ꜰʀᴏᴍ ᴛʜᴇ ʙᴏᴛ.</blockquote>"
-                )
-                return
         else:
             base64_string = basic
 
@@ -515,13 +408,7 @@ async def start_command(client: Client, message: Message):
 
         else:
             # Token Mode (default): shortener required for non-premium users
-            if (
-                not is_premium
-                and not is_super_premium
-                and user_id != OWNER_ID
-                and not basic.startswith("yu3elk")
-                and not secure_access
-            ):
+            if not is_premium and not is_super_premium and user_id != OWNER_ID and not basic.startswith("yu3elk"):
                 _vmode = await db.get_verification_mode()
                 if _vmode != 'instant':
                     _has_access, _ = await db.check_shortener_access(user_id)
@@ -543,12 +430,7 @@ async def start_command(client: Client, message: Message):
                     print(f"[bypass] lookup failed: {e}")
 
                 if pending is None:
-                    # A legacy verification callback is valid only when this
-                    # user actually has a live pending session for this exact
-                    # payload.  The previous code allowed this case through,
-                    # which turned a copied yu3elk URL into direct access.
-                    await _handle_bypass_attempt(client, message, user_id, base64_string)
-                    return
+                    pass
                 elif pending.get('expired'):
                     await message.reply_text(
                         "<blockquote>⏳ <b>ᴛʜɪs ᴠᴇʀɪꜰɪᴄᴀᴛɪᴏɴ ʟɪɴᴋ ʜᴀs ᴇxᴘɪʀᴇᴅ</b></blockquote>\n\n"
@@ -573,20 +455,8 @@ async def start_command(client: Client, message: Message):
             try:
                 if is_premium or is_super_premium or user_id == OWNER_ID:
                     await db.record_premium_access(user_id, base64_string)
-                elif secure_access or basic.startswith("yu3elk"):
-                    # Secure grants are already proof that the browser
-                    # completion gate passed.  Keep the existing sequential
-                    # shortener accounting and cooldown behavior.
-                    if secure_access:
-                        try:
-                            await db.expire_pending(user_id, base64_string)
-                        except Exception:
-                            pass
-                        completed_idx = int(secure_grant.get("slot_idx", -1))
-                        if completed_idx < 0:
-                            completed_idx = await db.consume_shortener_success(user_id)
-                    else:
-                        completed_idx = await db.consume_shortener_success(user_id)
+                elif basic.startswith("yu3elk"):
+                    completed_idx = await db.consume_shortener_success(user_id)
                     if completed_idx >= 0:
                         await db.increment_shortener_success(completed_idx)
                         try:
