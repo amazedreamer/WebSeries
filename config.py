@@ -253,7 +253,7 @@ SCREENSHOT_URL  = os.environ.get("SCREENSHOT_URL",  "t.me/ToxicXAdminRoBot")
 # --------------------------------------------
 # Time and its price
 # 10 Days
-PRICE1 = os.environ.get("PRICE1", "₹ 50")
+PRICE1 = os.environ.get("PRICE1", "₹ 1")
 # 1 Month
 PRICE2 = os.environ.get("PRICE2", "₹ 90")
 # 3 Month
